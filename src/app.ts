@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 import connectDB from './config/db';
-import { getMediaItemByName } from './controllers/dbInterface';
+import { getAllLegacyMediaItems } from './controllers/dbInterface';
 
 async function main() {
 
@@ -11,7 +11,8 @@ async function main() {
   // connect to db
   await connectDB();
 
-  getMediaItemByName('flibbet');
+  // getMediaItemByName('flibbet');
+  getAllLegacyMediaItems();
 }
 
 main();
