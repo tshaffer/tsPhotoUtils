@@ -2,35 +2,8 @@ import dotenv from 'dotenv';
 import { LegacyMediaItem } from 'entities';
 import connectDB from './config/db';
 import { addMediaItemToDb, getAllLegacyMediaItems } from './controllers/dbInterface';
+import { GoogleMediaItem, IdToGoogleMediaItems } from './types';
 import { getJsonFromFile } from './utils';
-
-export interface GoogleMediaMetadata {
-  creationTime: Date; // or string?
-  height: string;
-  width: string;
-  photo: GooglePhoto;
-}
-
-export interface GooglePhoto {
-  apertureFNumber: number;
-  cameraMake: string;
-  cameraModel: string;
-  focalLength: number;
-  isoEquivalent: number;
-}
-
-export interface GoogleMediaItem {
-  id: string;
-  filename: string;
-  mimeType: string;
-  baseUrl: string;
-  productUrl: string;
-  mediaMetadata: GoogleMediaMetadata;
-}
-
-type IdToGoogleMediaItems = {
-  [key: string]: GoogleMediaItem[]
-}
 
 async function main() {
 
@@ -50,9 +23,27 @@ async function main() {
 
   const googleMediaItemsById: IdToGoogleMediaItems = await getJsonFromFile('/Users/tedshaffer/Documents/Projects/importFromTakeout/testResults/googleMediaItemsById.json');
 
-  console.log('legacyMediaItems: ', legacyMediaItems.length);
+  let missingCount = 0;
+  for (const legacyMediaItem of legacyMediaItems) {
+    const googleId = legacyMediaItem.id;
+    if (!googleMediaItemsById.hasOwnProperty(googleId)) {
+      missingCount++;
+    }
+  }
+  // let dupCount = 0;
+  // for (const key in googleMediaItemsById) {
+  //   if (Object.prototype.hasOwnProperty.call(googleMediaItemsById, key)) {
+  //     const googleMediaItems: GoogleMediaItem[] = googleMediaItemsById[key];
+  //     if (googleMediaItems.length > 1) {
+  //       dupCount++;
+  //     }
+  //   }
+  // }
+
+  // console.log('legacyMediaItems: ', legacyMediaItems.length);
   console.log('googleMediaItemsById: ', Object.keys(googleMediaItemsById).length);
-  
+  // console.log('dupCount: ', dupCount);
+  console.log('missingCount: ', missingCount);
 }
 
 main();
