@@ -12,7 +12,8 @@ type IdToMatchedPhotoArray = {
 export const getJsonFromFile = async (filePath: string): Promise<any> => {
   const readFileStream: fs.ReadStream = openReadStream(filePath);
   const fileContents: string = await readStream(readFileStream);
-  const jsonObject: IdToMatchedPhotoArray = JSON.parse(fileContents);
+  // const jsonObject: IdToMatchedPhotoArray = JSON.parse(fileContents);
+  const jsonObject: any = JSON.parse(fileContents);
   return jsonObject;
 }
 
@@ -36,3 +37,19 @@ export const readStream = async (stream: fs.ReadStream): Promise<string> => {
 
   })
 }
+
+export const openWriteStream = (filePath: string): fs.WriteStream => {
+  let writeStream = fs.createWriteStream(filePath);
+  return writeStream;
+}
+
+export const writeToWriteStream = (stream: fs.WriteStream, chunk: string) => {
+  stream.write(chunk);
+  stream.write('\n');
+}
+
+export const closeStream = (stream: fs.WriteStream) => {
+  stream.close();
+}
+
+

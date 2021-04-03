@@ -25,3 +25,12 @@ export interface GoogleMediaItem {
 export type IdToGoogleMediaItems = {
   [key: string]: GoogleMediaItem[]
 }
+
+export type IdToMatchedGoogleMediaItem = {
+  [key: string]: MatchedGoogleMediaItem;
+}
+
+export interface MatchedGoogleMediaItem {
+  takeoutFilePath: string;
+  googleMediaItem: GoogleMediaItem;
+}

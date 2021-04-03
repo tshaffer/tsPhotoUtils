@@ -24,7 +24,8 @@ export const getAllLegacyMediaItems = async (): Promise<LegacyMediaItem[]> => {
   const legacyMediaItemModel = getLegacyMediaitemModel();
 
   const records: LegacyMediaItem[] = [];
-  const documents: any = await (legacyMediaItemModel as any).find().exec();
+  const documents: any = await (legacyMediaItemModel as any).find().limit(100).exec();
+  // const documents: any = await (legacyMediaItemModel as any).find().exec();
   // const documents: any = await (legacyMediaItemModel as any).find({ fileName: 'IMG_4726.PNG' }).exec();
   for (const document of documents) {
     const legacyMediaItem: LegacyMediaItem = document.toObject() as LegacyMediaItem;
@@ -37,7 +38,7 @@ export const getAllLegacyMediaItems = async (): Promise<LegacyMediaItem[]> => {
 }
 
 
-export const addMediaItemToDb = async (legacyMediaItem: LegacyMediaItem): Promise<string> => {
+export const addMediaItemToDb = async (mediaItem: MediaItem): Promise<any> => {
 
   const mediaItemModel = getMediaitemModel();
 
@@ -63,21 +64,34 @@ export const addMediaItemToDb = async (legacyMediaItem: LegacyMediaItem): Promis
   // description: string;
   // gpsPosition: string;
 
-  const mediaItem: MediaItem = {
-    googleId: legacyMediaItem.id,
-    fileName: legacyMediaItem.fileName,
-    filePath: legacyMediaItem.filePath,
-    googleUrl: legacyMediaItem.productUrl,
-    mimeType: legacyMediaItem.mimeType,
-    creationTime: legacyMediaItem.creationTime,
-    width: legacyMediaItem.width,
-    height: legacyMediaItem.height,
-    description: '',
-  };
+  // const mediaItem: MediaItem = {
+  //   googleId: mediaItem.id,
+  //   fileName: mediaItem.fileName,
+  //   filePath: mediaItem.filePath,
+  //   googleUrl: mediaItem.productUrl,
+  //   mimeType: mediaItem.mimeType,
+  //   creationTime: mediaItem.creationTime,
+  //   width: mediaItem.width,
+  //   height: mediaItem.height,
+  //   description: '',
+  // };
 
-  return mediaItemModel.collection.insertOne(mediaItem)
+  try {
+    return mediaItemModel.collection.insertOne(mediaItem)
     .then((retVal: any) => {
       const dbRecordId: string = retVal.insertedId._id.toString();
-      return dbRecordId;
+      // return dbRecordId;
+      return;
     })
+    .catch( (error: any) => {
+      console.log('db add error: ', error);
+      if (error.code === 11000) {
+        return;
+      } else {
+        debugger;
+      }
+    });
+  } catch(error: any) {
+    debugger;
+  }
 };
