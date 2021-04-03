@@ -1,4 +1,5 @@
 import * as mongoose from 'mongoose';
+import { connection } from '../config';
 
 const Schema = mongoose.Schema;
 
@@ -17,5 +18,10 @@ const MediaitemSchema = new Schema(
       gpsPosition: {type: String, default: ''}
   }
 );
+
+export const getMediaitemModel = () => {
+  const mediaItemModel = connection.model('mediaitem', MediaitemSchema);
+  return mediaItemModel;
+}
 
 export default MediaitemSchema;

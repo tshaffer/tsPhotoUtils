@@ -12,17 +12,32 @@ export interface LegacyMediaItem {
   height: number;
 }
 
+// export interface DbMediaItem {
+//   fileName: string;
+//   filePath?:string;
+//   title?:string;
+//   description?:string;
+//   mimeType?:string;
+//   width?:number;
+//   height?:number;
+//   creationDate?:Date;
+//   dateTimeOriginal?:Date;
+//   modifyDate?:string;
+//   gpsLatitude?:number;
+//   gpsLongitude?:number;
+// }
+
 export interface MediaItem {
   googleId: string;
   fileName: string;
   filePath: string;
-  productUrl: string;
+  googleUrl: string;
   mimeType: string;
   creationTime: Date;
   width: number;
   height: number;
-  orientation: number;
+  orientation?: number;
   description: string;
-  gpsPosition: string;
+  gpsPosition?: string;
 }
 
