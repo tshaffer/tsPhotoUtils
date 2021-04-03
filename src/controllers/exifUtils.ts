@@ -4,6 +4,11 @@ import {
 } from 'exiftool-vendored';
 
 export const getExifData = async (filePath: string): Promise<any> => {
-  const tags: Tags = await exiftool.read(filePath);
-  return tags;
+  try {
+    const tags: Tags = await exiftool.read(filePath);
+    return tags;  
+  } catch (error: any) {
+    console.log('getExifData failed on: ', filePath);
+    debugger;
+  }
 };

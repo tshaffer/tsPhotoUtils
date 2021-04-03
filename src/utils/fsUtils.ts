@@ -43,13 +43,22 @@ export const openWriteStream = (filePath: string): fs.WriteStream => {
   return writeStream;
 }
 
-export const writeToWriteStream = (stream: fs.WriteStream, chunk: string) => {
-  stream.write(chunk);
-  stream.write('\n');
+export const writeToWriteStream = (stream: fs.WriteStream, chunk: string): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    stream.write(chunk, () => {
+      stream.write('\n', () => {
+        return resolve();
+      });
+    });
+  })
 }
 
-export const closeStream = (stream: fs.WriteStream) => {
-  stream.close();
+export const closeStream = (stream: fs.WriteStream): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    stream.end(() => {
+      return resolve();
+    });
+  })
 }
 
 

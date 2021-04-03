@@ -17,11 +17,15 @@ interface FilePathToExifTags {
 
 let filePathsToExifTags: FilePathToExifTags = {};
 
-const writeFilePathsToExifTags = async () => {
-  const filePathsToExifTagsStream: any = openWriteStream('/Users/tedshaffer/Documents/Projects/tsPhotoUtils/data/filePathsToExifTags.json');
+const readFilePathsToExifTags = async () => {
+  filePathsToExifTags = await getJsonFromFile('/Users/tedshaffer/Documents/Projects/tsPhotoUtils/data/filePathsToExifTags.json');
+}
+
+const writeFilePathsToExifTags = async (filePath: string) => {
+  const filePathsToExifTagsStream: any = openWriteStream(filePath);
   const filePathsToExifTagsAsStr = JSON.stringify(filePathsToExifTags);
-  writeToWriteStream(filePathsToExifTagsStream, filePathsToExifTagsAsStr);
-  closeStream(filePathsToExifTagsStream);
+  await writeToWriteStream(filePathsToExifTagsStream, filePathsToExifTagsAsStr);
+  await closeStream(filePathsToExifTagsStream);
 }
 
 const retrieveExifData = async (filePath: string): Promise<Tags> => {
@@ -31,18 +35,18 @@ const retrieveExifData = async (filePath: string): Promise<Tags> => {
   } else {
     exifData = await getExifData(filePath);
     filePathsToExifTags[filePath] = exifData;
+    // writeFilePathsToExifTags('/Users/tedshaffer/Documents/Projects/tsPhotoUtils/data/filePathsToExifTagsNew.json')
   }
   return exifData;
 }
 
-async function main() {
-
-  console.log('main invoked');
-
-  dotenv.config({ path: './/src/config/config.env' });
-
+const newDbFromOldDbAndTakeout = async (): Promise<any> => {
+  
   // connect to db
   await connectDB();
+
+  // load existing exif tags
+  readFilePathsToExifTags();
 
   const legacyMediaItems: LegacyMediaItem[] = await getAllLegacyMediaItems();
   const matchedGoogleMediaItems: IdToMatchedGoogleMediaItem = await getJsonFromFile('/Users/tedshaffer/Documents/Projects/tsPhotoUtils/data/matchedGoogleMediaItems.json');
@@ -88,38 +92,21 @@ async function main() {
     await addMediaItemToDb(mediaItem)
   }
 
-  await writeFilePathsToExifTags();
+  console.log('all done');
+  // await writeFilePathsToExifTags('/Users/tedshaffer/Documents/Projects/tsPhotoUtils/data/filePathsToExifTags.json');
 
-  // const googleMediaItemsById: IdToGoogleMediaItems = await getJsonFromFile('/Users/tedshaffer/Documents/Projects/importFromTakeout/testResults/googleMediaItemsById.json');
+}
 
-  // getMediaItemByName('flibbet');
+async function main() {
 
-  // for (const legacyMediaItem of legacyMediaItems) {
-  //   addMediaItemToDb(legacyMediaItem);
-  // }
+  console.log('main invoked');
 
-  // let missingCount = 0;
-  // for (const legacyMediaItem of legacyMediaItems) {
-  //   const googleId = legacyMediaItem.id;
-  //   if (!googleMediaItemsById.hasOwnProperty(googleId)) {
-  //     missingCount++;
-  //   }
-  // }
+  dotenv.config({ path: './/src/config/config.env' });
 
-  // let dupCount = 0;
-  // for (const key in googleMediaItemsById) {
-  //   if (Object.prototype.hasOwnProperty.call(googleMediaItemsById, key)) {
-  //     const googleMediaItems: GoogleMediaItem[] = googleMediaItemsById[key];
-  //     if (googleMediaItems.length > 1) {
-  //       dupCount++;
-  //     }
-  //   }
-  // }
+  await newDbFromOldDbAndTakeout();
 
-  // console.log('legacyMediaItems: ', legacyMediaItems.length);
-  // console.log('googleMediaItemsById: ', Object.keys(googleMediaItemsById).length);
-  // // console.log('dupCount: ', dupCount);
-  // console.log('missingCount: ', missingCount);
+  // const matchedGoogleMediaItems: any = await getJsonFromFile('/Users/tedshaffer/Documents/Projects/tsPhotoUtils/data/matchedGoogleMediaItems.json');
+  // console.log(Object.keys(matchedGoogleMediaItems).length);
 }
 
 main();
