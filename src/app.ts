@@ -5,6 +5,9 @@ import { addMediaItemToDb, getAllLegacyMediaItems } from './controllers/dbInterf
 import { GoogleMediaItem, IdToGoogleMediaItems, IdToMatchedGoogleMediaItem, MatchedGoogleMediaItem } from './types';
 import { closeStream, getJsonFromFile, openWriteStream, writeToWriteStream } from './utils';
 
+import * as nodeDir from 'node-dir';
+import path from 'path';
+
 import {
   Tags
 } from 'exiftool-vendored';
@@ -41,7 +44,7 @@ const retrieveExifData = async (filePath: string): Promise<Tags> => {
 }
 
 const newDbFromOldDbAndTakeout = async (): Promise<any> => {
-  
+
   // connect to db
   await connectDB();
 
@@ -65,19 +68,19 @@ const newDbFromOldDbAndTakeout = async (): Promise<any> => {
       creationTime: legacyMediaItem.creationTime,
       width: legacyMediaItem.width,
       height: legacyMediaItem.height,
-      description: '',              
+      description: '',
     };
 
     // get googleId corresponding to the media item from the db
     const googleId = legacyMediaItem.id;
-    
+
     // is there a match with a takeout file?
     if (matchedGoogleMediaItems.hasOwnProperty(googleId)) {
-      
+
       // matched takeout file
       const googleMediaItem: MatchedGoogleMediaItem = matchedGoogleMediaItems[googleId];
       const { takeoutFilePath } = googleMediaItem;
-      
+
       let gpsPosition = null;
 
       // get tags for takeout file
@@ -97,13 +100,64 @@ const newDbFromOldDbAndTakeout = async (): Promise<any> => {
 
 }
 
+const findGPSInfoInTakeoutFiles = async () => {
+
+  // const testPath = '/Volumes/SHAFFEROTO/takeout/unzipped/Takeout 1/Google Photos/Kathy New Zealand 2012/_DSC0477.JPG.json';
+  // const jsonPhotoData = await getJsonFromFile(testPath);
+  // debugger;
+
+  let photoFileCount = 0;
+  let jsonFileCount = 0;
+  let filesWithGPS = 0;
+  let filesWithoutGPS = 0;
+
+  const rootDirPath = '/Volumes/SHAFFEROTO/takeout/unzipped';
+  const files = nodeDir.files(rootDirPath, { sync: true });
+  for (const file of files) {
+    const extension: string = path.extname(file);
+    if (extension.toLowerCase() === '.json') {
+      jsonFileCount++;
+      const jsonPhotoData = await getJsonFromFile(file);
+      if (jsonPhotoData.hasOwnProperty('geoData') || jsonPhotoData.hasOwnProperty('geoDataExif')) {
+        const geoData = jsonPhotoData['geoData'];
+        const geoDataExif = jsonPhotoData['geoDataExif'];
+        let isPhotoFile = false;
+        if (!isNil(geoData)) {
+          photoFileCount++;
+          isPhotoFile = true
+        } else if (!isNil(geoDataExif)) {
+          photoFileCount++;
+          isPhotoFile = true;
+        }
+        if (isPhotoFile) {
+          if (!isNil(geoData) && !isNil(geoData.latitude) && geoData.latitude !== 0 && !isNil(geoData.longitude) && geoData.longitude !== 0) {
+            filesWithGPS++;
+          } else if (!isNil(geoDataExif) && !isNil(geoDataExif.latitude) && geoDataExif.latitude !== 0 && !isNil(geoDataExif.longitude) && geoDataExif.longitude !== 0) {
+            filesWithGPS++;
+          } else {
+            filesWithoutGPS++;
+          }
+        }
+      }
+    }
+  }
+
+  console.log('jsonFileCount: ', jsonFileCount);
+  console.log('photoMetadataFileCount: ', photoFileCount);
+  console.log('filesWithGPS: ', filesWithGPS);
+  console.log('filesWithoutGPS: ', filesWithoutGPS);
+}
+
+
 async function main() {
 
   console.log('main invoked');
 
   dotenv.config({ path: './/src/config/config.env' });
 
-  await newDbFromOldDbAndTakeout();
+  await findGPSInfoInTakeoutFiles();
+
+  // await newDbFromOldDbAndTakeout();
 
   // const matchedGoogleMediaItems: any = await getJsonFromFile('/Users/tedshaffer/Documents/Projects/tsPhotoUtils/data/matchedGoogleMediaItems.json');
   // console.log(Object.keys(matchedGoogleMediaItems).length);

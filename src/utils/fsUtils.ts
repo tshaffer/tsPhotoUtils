@@ -13,8 +13,12 @@ export const getJsonFromFile = async (filePath: string): Promise<any> => {
   const readFileStream: fs.ReadStream = openReadStream(filePath);
   const fileContents: string = await readStream(readFileStream);
   // const jsonObject: IdToMatchedPhotoArray = JSON.parse(fileContents);
-  const jsonObject: any = JSON.parse(fileContents);
-  return jsonObject;
+  try {
+    const jsonObject: any = JSON.parse(fileContents);
+    return jsonObject;  
+  } catch (error: any) {
+    return {};
+  }
 }
 
 const openReadStream = (filePath: string): fs.ReadStream => {
