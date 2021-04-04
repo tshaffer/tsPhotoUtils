@@ -1,3 +1,4 @@
+import args from 'command-line-args';
 import dotenv from 'dotenv';
 import { LegacyMediaItem, MediaItem } from 'entities';
 import connectDB from './config/db';
@@ -15,12 +16,26 @@ import { getAllMediaItemsFromGoogle, getExifData } from './controllers';
 import { isNil } from 'lodash';
 import { AuthService } from './auth';
 import { getAuthService } from './controllers/googlePhotosService';
+// import commandLineArgs from 'command-line-args';
 
 interface FilePathToExifTags {
   [key: string]: Tags;
 }
 
 let filePathsToExifTags: FilePathToExifTags = {};
+
+// const options = args([
+//   { name: 'job', type: String },
+// ]);
+
+const optionDefinitions = [
+  { name: 'verbose', alias: 'v', type: Boolean },
+  { name: 'src', type: String, multiple: true, defaultOption: true },
+  { name: 'timeout', alias: 't', type: Number }
+]
+const commandLineArgs = require('command-line-args')
+const options = commandLineArgs(optionDefinitions)
+console.log(options);
 
 const readFilePathsToExifTags = async () => {
   filePathsToExifTags = await getJsonFromFile('/Users/tedshaffer/Documents/Projects/tsPhotoUtils/data/filePathsToExifTags.json');
@@ -175,8 +190,13 @@ async function main() {
 
   dotenv.config({ path: './/src/config/config.env' });
 
-  const authService: AuthService = await getAuthService();
-  await getGooglePhotoInfo(authService);
+  // argv is an array
+  console.log(process.argv);
+
+  console.log(options);
+
+  // const authService: AuthService = await getAuthService();
+  // await getGooglePhotoInfo(authService);
 
   // await findGPSInfoInTakeoutFiles();
 
