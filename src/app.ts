@@ -2,8 +2,8 @@ import dotenv from 'dotenv';
 import { LegacyMediaItem, MediaItem } from 'entities';
 import connectDB from './config/db';
 import { addMediaItemToDb, getAllLegacyMediaItems } from './controllers/dbInterface';
-import { GoogleMediaItem, IdToGoogleMediaItems, IdToMatchedGoogleMediaItem, MatchedGoogleMediaItem } from './types';
-import { closeStream, getJsonFromFile, openWriteStream, writeToWriteStream } from './utils';
+import { GoogleMediaItem, IdToAnyArray, IdToGoogleMediaItems, IdToMatchedGoogleMediaItem, MatchedGoogleMediaItem } from './types';
+import { closeStream, getJsonFromFile, openWriteStream, writeJsonToFile, writeToWriteStream } from './utils';
 
 import * as nodeDir from 'node-dir';
 import path from 'path';
@@ -11,8 +11,10 @@ import path from 'path';
 import {
   Tags
 } from 'exiftool-vendored';
-import { getExifData } from './controllers';
+import { getAllMediaItemsFromGoogle, getExifData } from './controllers';
 import { isNil } from 'lodash';
+import { AuthService } from './auth';
+import { getAuthService } from './controllers/googlePhotosService';
 
 interface FilePathToExifTags {
   [key: string]: Tags;
@@ -149,13 +151,34 @@ const findGPSInfoInTakeoutFiles = async () => {
 }
 
 
+const getGooglePhotoInfo = async (authService: AuthService) => {
+
+  const googleMediaItems: GoogleMediaItem[] = await getAllMediaItemsFromGoogle(authService);
+  console.log(googleMediaItems);
+
+  const googleMediaItemsById: IdToAnyArray = {};
+  for (const googleMediaItem of googleMediaItems) {
+    if (!googleMediaItemsById.hasOwnProperty(googleMediaItem.id)) {
+      googleMediaItemsById[googleMediaItem.id] = [];
+    }
+    googleMediaItemsById[googleMediaItem.id].push(googleMediaItem);
+  }
+
+  const success: boolean = await writeJsonToFile('/Users/tedshaffer/Pictures/ShafferPhotoData/googleItemsById.json', googleMediaItemsById);
+  console.log(success);
+}
+
+
 async function main() {
 
   console.log('main invoked');
 
   dotenv.config({ path: './/src/config/config.env' });
 
-  await findGPSInfoInTakeoutFiles();
+  const authService: AuthService = await getAuthService();
+  await getGooglePhotoInfo(authService);
+
+  // await findGPSInfoInTakeoutFiles();
 
   // await newDbFromOldDbAndTakeout();
 
