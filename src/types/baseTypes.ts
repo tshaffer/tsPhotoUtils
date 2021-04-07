@@ -7,4 +7,11 @@ export enum Jobs {
   GetAddedGoogleMediaItems = 'GetAddedGoogleMediaItems',
   GetRemovedGoogleMediaItems = 'GetRemovedGoogleMediaItems',
   GetGpsDataFromTakeoutFiles = 'GetGpsDataFromTakeoutFiles',
+  Db = 'Db',
+}
+
+export interface TsPhotoUtilsConfiguration {
+  mongoUri: string;
+  mongoUriOld: string;
+  dataDir: string;
 }

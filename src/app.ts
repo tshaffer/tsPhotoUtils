@@ -16,6 +16,8 @@ import { getAllMediaItemsFromGoogle, getExifData } from './controllers';
 import { isNil } from 'lodash';
 import { AuthService } from './auth';
 import { getAuthService } from './controllers/googlePhotosService';
+import { buildGoogleMediaItemsById } from './jobs';
+import { readConfig } from './config';
 // import commandLineArgs from 'command-line-args';
 
 interface FilePathToExifTags {
@@ -24,15 +26,10 @@ interface FilePathToExifTags {
 
 let filePathsToExifTags: FilePathToExifTags = {};
 
-// const options = args([
-//   { name: 'job', type: String },
-// ]);
+readConfig('/Users/tedshaffer/Documents/Projects/tsPhotoUtils/src/config/config.env');
 
 const optionDefinitions = [
   { name: 'job', alias: 'j', type: String },
-  { name: 'verbose', alias: 'v', type: Boolean },
-  { name: 'src', type: String, multiple: true, defaultOption: true },
-  { name: 'timeout', alias: 't', type: Number }
 ]
 const commandLineArgs = require('command-line-args')
 const options = commandLineArgs(optionDefinitions)
@@ -66,52 +63,52 @@ const newDbFromOldDbAndTakeout = async (): Promise<any> => {
   // connect to db
   await connectDB();
 
-  // load existing exif tags
-  readFilePathsToExifTags();
+  // // load existing exif tags
+  // readFilePathsToExifTags();
 
-  const legacyMediaItems: LegacyMediaItem[] = await getAllLegacyMediaItems();
-  const matchedGoogleMediaItems: IdToMatchedGoogleMediaItem = await getJsonFromFile('/Users/tedshaffer/Documents/Projects/tsPhotoUtils/data/matchedGoogleMediaItems.json');
-  // const filePathsToExifTags: FilePathToExifTags = await getJsonFromFile('/Users/tedshaffer/Documents/Projects/importFromTakeout/testResults/filePathsToExifTags.json');
+  // const legacyMediaItems: LegacyMediaItem[] = await getAllLegacyMediaItems();
+  // const matchedGoogleMediaItems: IdToMatchedGoogleMediaItem = await getJsonFromFile('/Users/tedshaffer/Documents/Projects/tsPhotoUtils/data/matchedGoogleMediaItems.json');
+  // // const filePathsToExifTags: FilePathToExifTags = await getJsonFromFile('/Users/tedshaffer/Documents/Projects/importFromTakeout/testResults/filePathsToExifTags.json');
 
-  // populate new db
-  // iterate through the items in the legacy db
-  for (const legacyMediaItem of legacyMediaItems) {
+  // // populate new db
+  // // iterate through the items in the legacy db
+  // for (const legacyMediaItem of legacyMediaItems) {
 
-    const mediaItem: MediaItem = {
-      googleId: legacyMediaItem.id,
-      fileName: legacyMediaItem.fileName,
-      filePath: legacyMediaItem.filePath,
-      googleUrl: legacyMediaItem.productUrl,
-      mimeType: legacyMediaItem.mimeType,
-      creationTime: legacyMediaItem.creationTime,
-      width: legacyMediaItem.width,
-      height: legacyMediaItem.height,
-      description: '',
-    };
+  //   const mediaItem: MediaItem = {
+  //     googleId: legacyMediaItem.id,
+  //     fileName: legacyMediaItem.fileName,
+  //     filePath: legacyMediaItem.filePath,
+  //     googleUrl: legacyMediaItem.productUrl,
+  //     mimeType: legacyMediaItem.mimeType,
+  //     creationTime: legacyMediaItem.creationTime,
+  //     width: legacyMediaItem.width,
+  //     height: legacyMediaItem.height,
+  //     description: '',
+  //   };
 
-    // get googleId corresponding to the media item from the db
-    const googleId = legacyMediaItem.id;
+  //   // get googleId corresponding to the media item from the db
+  //   const googleId = legacyMediaItem.id;
 
-    // is there a match with a takeout file?
-    if (matchedGoogleMediaItems.hasOwnProperty(googleId)) {
+  //   // is there a match with a takeout file?
+  //   if (matchedGoogleMediaItems.hasOwnProperty(googleId)) {
 
-      // matched takeout file
-      const googleMediaItem: MatchedGoogleMediaItem = matchedGoogleMediaItems[googleId];
-      const { takeoutFilePath } = googleMediaItem;
+  //     // matched takeout file
+  //     const googleMediaItem: MatchedGoogleMediaItem = matchedGoogleMediaItems[googleId];
+  //     const { takeoutFilePath } = googleMediaItem;
 
-      let gpsPosition = null;
+  //     let gpsPosition = null;
 
-      // get tags for takeout file
-      const tags: Tags = await retrieveExifData(takeoutFilePath);
-      if (!isNil(tags.GPSPosition)) {
-        mediaItem.gpsPosition = tags.GPSPosition;
-      } else if (!isNil(tags.GPSAltitude) && (!isNil(tags.GPSLongitude))) {
-        debugger;
-      }
-    }
+  //     // get tags for takeout file
+  //     const tags: Tags = await retrieveExifData(takeoutFilePath);
+  //     if (!isNil(tags.GPSPosition)) {
+  //       mediaItem.gpsPosition = tags.GPSPosition;
+  //     } else if (!isNil(tags.GPSAltitude) && (!isNil(tags.GPSLongitude))) {
+  //       debugger;
+  //     }
+  //   }
 
-    await addMediaItemToDb(mediaItem)
-  }
+  //   await addMediaItemToDb(mediaItem)
+  // }
 
   console.log('all done');
   // await writeFilePathsToExifTags('/Users/tedshaffer/Documents/Projects/tsPhotoUtils/data/filePathsToExifTags.json');
@@ -166,30 +163,11 @@ const findGPSInfoInTakeoutFiles = async () => {
   console.log('filesWithoutGPS: ', filesWithoutGPS);
 }
 
-
-const getGooglePhotoInfo = async (authService: AuthService) => {
-
-  const googleMediaItems: GoogleMediaItem[] = await getAllMediaItemsFromGoogle(authService);
-  console.log(googleMediaItems);
-
-  const googleMediaItemsById: IdToAnyArray = {};
-  for (const googleMediaItem of googleMediaItems) {
-    if (!googleMediaItemsById.hasOwnProperty(googleMediaItem.id)) {
-      googleMediaItemsById[googleMediaItem.id] = [];
-    }
-    googleMediaItemsById[googleMediaItem.id].push(googleMediaItem);
-  }
-
-  const success: boolean = await writeJsonToFile('/Users/tedshaffer/Pictures/ShafferPhotoData/googleItemsById.json', googleMediaItemsById);
-  console.log(success);
-}
-
-
 async function main() {
 
   console.log('main invoked');
 
-  dotenv.config({ path: './/src/config/config.env' });
+  // dotenv.config({ path: './/src/config/config.env' });
 
   // argv is an array
   console.log(process.argv);
@@ -199,6 +177,7 @@ async function main() {
   switch (options.job) {
     case Jobs.BuildGoogleMediaItemsById:
       console.log('BuildGoogleMediaItemsById');
+      buildGoogleMediaItemsById();
       break;
     case Jobs.GetAddedGoogleMediaItems:
       console.log('GetAddedGoogleMediaItems');
@@ -208,6 +187,10 @@ async function main() {
       break;
     case Jobs.GetGpsDataFromTakeoutFiles:
       console.log('invoke GetGpsDataFromTakeoutFiles');
+      break;
+    case Jobs.Db:
+      console.log('invoke newDbFromOldDbAndTakeout');
+      newDbFromOldDbAndTakeout();
       break;
     default:
       console.log(options.job + ' not supported.');
