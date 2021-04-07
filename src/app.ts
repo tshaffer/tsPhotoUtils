@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 import { LegacyMediaItem, MediaItem } from 'entities';
 import connectDB from './config/db';
 import { addMediaItemToDb, getAllLegacyMediaItems } from './controllers/dbInterface';
-import { GoogleMediaItem, IdToAnyArray, IdToGoogleMediaItems, IdToMatchedGoogleMediaItem, MatchedGoogleMediaItem } from './types';
+import { GoogleMediaItem, IdToAnyArray, IdToGoogleMediaItems, IdToMatchedGoogleMediaItem, Jobs, MatchedGoogleMediaItem } from './types';
 import { closeStream, getJsonFromFile, openWriteStream, writeJsonToFile, writeToWriteStream } from './utils';
 
 import * as nodeDir from 'node-dir';
@@ -29,6 +29,7 @@ let filePathsToExifTags: FilePathToExifTags = {};
 // ]);
 
 const optionDefinitions = [
+  { name: 'job', alias: 'j', type: String },
   { name: 'verbose', alias: 'v', type: Boolean },
   { name: 'src', type: String, multiple: true, defaultOption: true },
   { name: 'timeout', alias: 't', type: Number }
@@ -195,6 +196,23 @@ async function main() {
 
   console.log(options);
 
+  switch (options.job) {
+    case Jobs.BuildGoogleMediaItemsById:
+      console.log('BuildGoogleMediaItemsById');
+      break;
+    case Jobs.GetAddedGoogleMediaItems:
+      console.log('GetAddedGoogleMediaItems');
+      break;
+    case Jobs.GetRemovedGoogleMediaItems:
+      console.log('GetRemovedGoogleMediaItems');
+      break;
+    case Jobs.GetGpsDataFromTakeoutFiles:
+      console.log('invoke GetGpsDataFromTakeoutFiles');
+      break;
+    default:
+      console.log(options.job + ' not supported.');
+      break;
+  }
   // const authService: AuthService = await getAuthService();
   // await getGooglePhotoInfo(authService);
 

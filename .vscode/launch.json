@@ -16,7 +16,8 @@
         "${workspaceFolder}/dist/**/*.js"
       ],
       "args": [
-        "--verbose", "--timeout=1000", "--src=one.js", "--src=two.js"
+        //"--verbose", "--timeout=1000", "--src=one.js", "--src=two.js"
+        "--job=GetRemovedGoogleMediaItems"
       ]
     }
   ]
