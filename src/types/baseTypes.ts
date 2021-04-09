@@ -16,4 +16,5 @@ export interface TsPhotoUtilsConfiguration {
   DATA_DIR: string;
   GOOGLE_MEDIA_ITEMS_BY_ID: string;
   OLD_GOOGLE_MEDIA_ITEMS_BY_ID: string;
+  ADDED_GOOGLE_MEDIA_ITEMS: string;
 }
