@@ -34,7 +34,7 @@ export const buildGoogleMediaItemsById = async () => {
   // const filePath = isomorphicPath.join(dirPath, photoInCollection.id + '.jpg');
 
   const success: boolean = await writeJsonToFile(
-    isomorphicPath.join(tsPhotoUtilsConfiguration.dataDir, tsPhotoUtilsConfiguration.GOOGLE_MEDIA_ITEMS_BY_ID),
+    isomorphicPath.join(tsPhotoUtilsConfiguration.DATA_DIR, tsPhotoUtilsConfiguration.GOOGLE_MEDIA_ITEMS_BY_ID),
     googleMediaItemsById
   );
   console.log(success);
@@ -42,8 +42,8 @@ export const buildGoogleMediaItemsById = async () => {
 
 export const getAddedGoogleMediaItems = async () => {
 
-  const googleMediaItemsById: IdToGoogleMediaItemArray = await getJsonFromFile(isomorphicPath.join(tsPhotoUtilsConfiguration.dataDir, tsPhotoUtilsConfiguration.GOOGLE_MEDIA_ITEMS_BY_ID));
-  const oldGoogleMediaItemsById: IdToGoogleMediaItemArray = await getJsonFromFile(isomorphicPath.join(tsPhotoUtilsConfiguration.dataDir, tsPhotoUtilsConfiguration.OLD_GOOGLE_MEDIA_ITEMS_BY_ID));
+  const googleMediaItemsById: IdToGoogleMediaItemArray = await getJsonFromFile(isomorphicPath.join(tsPhotoUtilsConfiguration.DATA_DIR, tsPhotoUtilsConfiguration.GOOGLE_MEDIA_ITEMS_BY_ID));
+  const oldGoogleMediaItemsById: IdToGoogleMediaItemArray = await getJsonFromFile(isomorphicPath.join(tsPhotoUtilsConfiguration.DATA_DIR, tsPhotoUtilsConfiguration.OLD_GOOGLE_MEDIA_ITEMS_BY_ID));
 
   for (const googleMediaItemId in googleMediaItemsById) {
     if (Object.prototype.hasOwnProperty.call(googleMediaItemsById, googleMediaItemId)) {
@@ -57,8 +57,8 @@ export const getAddedGoogleMediaItems = async () => {
 
 export const getRemovedGoogleMediaItems = async () => {
 
-  const googleMediaItemsById: IdToGoogleMediaItemArray = await getJsonFromFile(isomorphicPath.join(tsPhotoUtilsConfiguration.dataDir, tsPhotoUtilsConfiguration.GOOGLE_MEDIA_ITEMS_BY_ID));
-  const oldGoogleMediaItemsById: IdToGoogleMediaItemArray = await getJsonFromFile(isomorphicPath.join(tsPhotoUtilsConfiguration.dataDir, tsPhotoUtilsConfiguration.OLD_GOOGLE_MEDIA_ITEMS_BY_ID));
+  const googleMediaItemsById: IdToGoogleMediaItemArray = await getJsonFromFile(isomorphicPath.join(tsPhotoUtilsConfiguration.DATA_DIR, tsPhotoUtilsConfiguration.GOOGLE_MEDIA_ITEMS_BY_ID));
+  const oldGoogleMediaItemsById: IdToGoogleMediaItemArray = await getJsonFromFile(isomorphicPath.join(tsPhotoUtilsConfiguration.DATA_DIR, tsPhotoUtilsConfiguration.OLD_GOOGLE_MEDIA_ITEMS_BY_ID));
 
   for (const googleMediaItemId in oldGoogleMediaItemsById) {
     if (Object.prototype.hasOwnProperty.call(oldGoogleMediaItemsById, googleMediaItemId)) {

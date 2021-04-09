@@ -11,9 +11,9 @@ export enum Jobs {
 }
 
 export interface TsPhotoUtilsConfiguration {
-  mongoUri: string;
-  mongoUriOld: string;
-  dataDir: string;
+  MONGO_URI: string;
+  MONGO_URI_OLD: string;
+  DATA_DIR: string;
   GOOGLE_MEDIA_ITEMS_BY_ID: string;
   OLD_GOOGLE_MEDIA_ITEMS_BY_ID: string;
 }

@@ -7,8 +7,8 @@ import { tsPhotoUtilsConfiguration } from './config';
 
 async function connectDB() {
   console.log('legacy uri is:');
-  console.log(tsPhotoUtilsConfiguration.mongoUriOld);
-  legacyConnection = await mongoose.createConnection(tsPhotoUtilsConfiguration.mongoUriOld, {
+  console.log(tsPhotoUtilsConfiguration.MONGO_URI_OLD);
+  legacyConnection = await mongoose.createConnection(tsPhotoUtilsConfiguration.MONGO_URI_OLD, {
     useNewUrlParser: true,
     useCreateIndex: true,
     useFindAndModify: false,
@@ -16,8 +16,8 @@ async function connectDB() {
   console.log(`MongoDB old db connected`);
 
   console.log('new uri is:');
-  console.log(tsPhotoUtilsConfiguration.mongoUri);
-  connection = await mongoose.createConnection(tsPhotoUtilsConfiguration.mongoUri, {
+  console.log(tsPhotoUtilsConfiguration.MONGO_URI);
+  connection = await mongoose.createConnection(tsPhotoUtilsConfiguration.MONGO_URI, {
     useNewUrlParser: true,
     useCreateIndex: true,
     useFindAndModify: false,

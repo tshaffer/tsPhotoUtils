@@ -12,9 +12,9 @@ export const readConfig = (pathToConfigFile: string): void => {
 
     if (!isNil(parsedConfig)) {
       tsPhotoUtilsConfiguration = {
-        mongoUri: parsedConfig.MONGO_URI,
-        mongoUriOld: parsedConfig.MONGO_URI_OLD_DB,
-        dataDir: parsedConfig.DATA_DIR,
+        MONGO_URI: parsedConfig.MONGO_URI,
+        MONGO_URI_OLD: parsedConfig.MONGO_URI_OLD_DB,
+        DATA_DIR: parsedConfig.DATA_DIR,
         GOOGLE_MEDIA_ITEMS_BY_ID: parsedConfig.GOOGLE_MEDIA_ITEMS_BY_ID,
         OLD_GOOGLE_MEDIA_ITEMS_BY_ID: parsedConfig.OLD_GOOGLE_MEDIA_ITEMS_BY_ID,
       };
