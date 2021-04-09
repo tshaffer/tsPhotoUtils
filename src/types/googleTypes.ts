@@ -13,6 +13,11 @@ export interface GooglePhoto {
   isoEquivalent: number;
 }
 
+export type IdToGoogleMediaItemArray = {
+  [key: string]: GoogleMediaItem[]
+}
+
+
 export interface GoogleMediaItem {
   id: string;
   filename: string;

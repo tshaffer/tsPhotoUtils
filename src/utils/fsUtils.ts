@@ -12,7 +12,6 @@ type IdToMatchedPhotoArray = {
 export const getJsonFromFile = async (filePath: string): Promise<any> => {
   const readFileStream: fs.ReadStream = openReadStream(filePath);
   const fileContents: string = await readStream(readFileStream);
-  // const jsonObject: IdToMatchedPhotoArray = JSON.parse(fileContents);
   try {
     const jsonObject: any = JSON.parse(fileContents);
     return jsonObject;  

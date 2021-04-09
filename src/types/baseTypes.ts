@@ -14,4 +14,6 @@ export interface TsPhotoUtilsConfiguration {
   mongoUri: string;
   mongoUriOld: string;
   dataDir: string;
+  GOOGLE_MEDIA_ITEMS_BY_ID: string;
+  OLD_GOOGLE_MEDIA_ITEMS_BY_ID: string;
 }
