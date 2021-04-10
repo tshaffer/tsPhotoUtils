@@ -100,21 +100,23 @@ const addTakeoutFileByImageDimensions = (takeoutFilesByDimensions: IdToStringArr
 
 export const testJob = async () => {
 
+  const metadataFilePathByTakeoutFilePath: any = {};
+
   let foundMatchingMetadataFiles = 0;
   let missingMatchingMetadataFiles = 0;
 
   const metadataFilePaths: string[] = await getJsonFilePaths(tsPhotoUtilsConfiguration.MEDIA_ITEMS_DIR);
   const metadataFilePathsByFilePath: any = {};
   for (const metadataFilePath of metadataFilePaths) {
-    if (metadataFilePathsByFilePath.hasOwnProperty(metadataFilePath)) {
-      debugger;
-    }
 
     const indexOfGooglePhotos = metadataFilePath.lastIndexOf('Google Photos');
     const indexOfUniqueFilePath = indexOfGooglePhotos + 14;
     const uniqueFilePath = metadataFilePath.substring(indexOfUniqueFilePath);
 
-    metadataFilePathsByFilePath[uniqueFilePath] = uniqueFilePath;
+    metadataFilePathsByFilePath[uniqueFilePath] = {
+      uniqueFilePath,
+      metadataFilePath,
+    };
   }
 
   const takeoutFilesByFileName: IdToStringArray = await getJsonFromFile(
@@ -132,6 +134,8 @@ export const testJob = async () => {
         const takeoutMetadataFilePath = uniqueFilePath + '.json';
         if (metadataFilePathsByFilePath.hasOwnProperty(takeoutMetadataFilePath)) {
           foundMatchingMetadataFiles++;
+          const element = metadataFilePathsByFilePath[takeoutMetadataFilePath];
+          metadataFilePathByTakeoutFilePath[takeoutFilePath] = element.metadataFilePath;
         } else {
           missingMatchingMetadataFiles++;
         }
@@ -141,7 +145,7 @@ export const testJob = async () => {
 
   console.log('foundMatchingMetadataFiles', foundMatchingMetadataFiles);
   console.log('missingMatchingMetadataFiles', missingMatchingMetadataFiles);
-
+  console.log(metadataFilePathByTakeoutFilePath);
 }
 
 export const testJob0 = async () => {
