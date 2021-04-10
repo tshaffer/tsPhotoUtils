@@ -102,6 +102,52 @@ export const testJob = async () => {
 
   let foundMatchingMetadataFiles = 0;
   let missingMatchingMetadataFiles = 0;
+
+  const metadataFilePaths: string[] = await getJsonFilePaths(tsPhotoUtilsConfiguration.MEDIA_ITEMS_DIR);
+  const metadataFilePathsByFilePath: any = {};
+  for (const metadataFilePath of metadataFilePaths) {
+    if (metadataFilePathsByFilePath.hasOwnProperty(metadataFilePath)) {
+      debugger;
+    }
+
+    const indexOfGooglePhotos = metadataFilePath.lastIndexOf('Google Photos');
+    const indexOfUniqueFilePath = indexOfGooglePhotos + 14;
+    const uniqueFilePath = metadataFilePath.substring(indexOfUniqueFilePath);
+
+    metadataFilePathsByFilePath[uniqueFilePath] = uniqueFilePath;
+  }
+
+  const takeoutFilesByFileName: IdToStringArray = await getJsonFromFile(
+    isomorphicPath.join(tsPhotoUtilsConfiguration.DATA_DIR, tsPhotoUtilsConfiguration.TAKEOUT_FILES_BY_FILE_NAME));
+
+  for (const key in takeoutFilesByFileName) {
+    if (Object.prototype.hasOwnProperty.call(takeoutFilesByFileName, key)) {
+      const takeoutFilePaths: string[] = takeoutFilesByFileName[key];
+      for (const takeoutFilePath of takeoutFilePaths) {
+
+        const indexOfGooglePhotos = takeoutFilePath.lastIndexOf('Google Photos');
+        const indexOfUniqueFilePath = indexOfGooglePhotos + 14;
+        const uniqueFilePath = takeoutFilePath.substring(indexOfUniqueFilePath);
+    
+        const takeoutMetadataFilePath = uniqueFilePath + '.json';
+        if (metadataFilePathsByFilePath.hasOwnProperty(takeoutMetadataFilePath)) {
+          foundMatchingMetadataFiles++;
+        } else {
+          missingMatchingMetadataFiles++;
+        }
+      }
+    }
+  }
+
+  console.log('foundMatchingMetadataFiles', foundMatchingMetadataFiles);
+  console.log('missingMatchingMetadataFiles', missingMatchingMetadataFiles);
+
+}
+
+export const testJob0 = async () => {
+
+  let foundMatchingMetadataFiles = 0;
+  let missingMatchingMetadataFiles = 0;
   const duplicateFileNames: string[] = [];
 
   // const imageFilePaths: string[] = getImageFilePaths(tsPhotoUtilsConfiguration.MEDIA_ITEMS_DIR);
@@ -110,9 +156,9 @@ export const testJob = async () => {
   const jsonFilePathsByFileName: any = {};
   for (const jsonFilePath of jsonFilePaths) {
     const fileName = path.basename(jsonFilePath);
-    const jsonFileName = fileName + '.json';
-    if (jsonFilePathsByFileName.hasOwnProperty(jsonFileName)) {
-      duplicateFileNames.push(jsonFileName);
+    // const jsonFileName = fileName + '.json';
+    if (jsonFilePathsByFileName.hasOwnProperty(fileName)) {
+      duplicateFileNames.push(fileName);
     } else {
       jsonFilePathsByFileName[fileName] = jsonFilePath;
     }

@@ -206,8 +206,7 @@ async function main() {
       break;
     case Jobs.TestJob:
       console.log('TestJob');
-      const jsonFiles = await testJob();
-      console.log(jsonFiles);
+      await testJob();
       break;
     default:
       console.log(options.job + ' not supported.');
