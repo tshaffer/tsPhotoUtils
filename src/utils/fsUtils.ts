@@ -1,13 +1,35 @@
 import fs from 'fs';
+import path from 'path';
+import * as nodeDir from 'node-dir';
 
-interface MatchedPhoto {
-  imageFilePath: string;
-  exactMatch: boolean;
+const imageFileExtensions = ['.jpg', '.JPG', '.jpeg', '.JPEG', '.png', '.PNG', '.heic', '.HEIC'];
+
+// interface MatchedPhoto {
+//   imageFilePath: string;
+//   exactMatch: boolean;
+// }
+
+// type IdToMatchedPhotoArray = {
+//   [key: string]: MatchedPhoto[]
+// }
+
+const getFilesInDirectory = (rootDirPath: string) => {
+  return nodeDir.files(rootDirPath, { sync: true });
 }
 
-type IdToMatchedPhotoArray = {
-  [key: string]: MatchedPhoto[]
+export const getImageFilePaths = (rootPath: string): string[] => {
+  const imageFiles: string[] = [];
+  const files = getFilesInDirectory(rootPath);
+  // TEDTODO - use regex?
+  for (const file of files) {
+    const extension: string = path.extname(file);
+    if (imageFileExtensions.includes(extension)) {
+      imageFiles.push(file);
+    }
+  }
+  return imageFiles;
 }
+
 
 export const getJsonFromFile = async (filePath: string): Promise<any> => {
   const readFileStream: fs.ReadStream = openReadStream(filePath);

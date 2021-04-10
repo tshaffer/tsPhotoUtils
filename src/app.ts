@@ -16,7 +16,12 @@ import { getAllMediaItemsFromGoogle, getExifData } from './controllers';
 import { isNil } from 'lodash';
 import { AuthService } from './auth';
 import { getAuthService } from './controllers/googlePhotosService';
-import { buildGoogleMediaItemsById, getAddedGoogleMediaItems, getRemovedGoogleMediaItems } from './jobs';
+import {
+  buildGoogleMediaItemsById,
+  getAddedGoogleMediaItems,
+  getRemovedGoogleMediaItems,
+  buildTakeoutFileMaps,
+} from './jobs';
 import { readConfig } from './config';
 // import commandLineArgs from 'command-line-args';
 
@@ -194,13 +199,17 @@ async function main() {
       console.log('invoke newDbFromOldDbAndTakeout');
       newDbFromOldDbAndTakeout();
       break;
+    case Jobs.BuildTakeoutFileMaps:
+      console.log('BuildTakeoutFileMaps');
+      await buildTakeoutFileMaps();
+      break;
     default:
       console.log(options.job + ' not supported.');
       break;
   }
 
   console.log('job complete');
-  
+
   // const authService: AuthService = await getAuthService();
   // await getGooglePhotoInfo(authService);
 
