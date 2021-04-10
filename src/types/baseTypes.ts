@@ -13,6 +13,7 @@ export enum Jobs {
   GetGpsDataFromTakeoutFiles = 'GetGpsDataFromTakeoutFiles',
   BuildTakeoutFileMaps = 'BuildTakeoutFileMaps',
   Db = 'Db',
+  TestJob = 'TestJob',
 }
 
 export interface TsPhotoUtilsConfiguration {

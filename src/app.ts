@@ -21,6 +21,7 @@ import {
   getAddedGoogleMediaItems,
   getRemovedGoogleMediaItems,
   buildTakeoutFileMaps,
+  testJob,
 } from './jobs';
 import { readConfig } from './config';
 // import commandLineArgs from 'command-line-args';
@@ -202,6 +203,11 @@ async function main() {
     case Jobs.BuildTakeoutFileMaps:
       console.log('BuildTakeoutFileMaps');
       await buildTakeoutFileMaps();
+      break;
+    case Jobs.TestJob:
+      console.log('TestJob');
+      const jsonFiles = await testJob();
+      console.log(jsonFiles);
       break;
     default:
       console.log(options.job + ' not supported.');

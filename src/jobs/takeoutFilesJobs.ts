@@ -1,11 +1,12 @@
 import { isNumber, isString } from 'lodash';
+import path from 'path';
 import isomorphicPath from 'isomorphic-path';
 import {
   Tags
 } from 'exiftool-vendored';
 
 import { getExifData } from '../controllers';
-import { getDateTimeSinceZero, getImageFilePaths, writeJsonToFile } from '../utils';
+import { getDateTimeSinceZero, getImageFilePaths, getJsonFilePaths, getJsonFromFile, writeJsonToFile } from '../utils';
 import { IdToStringArray } from '../types';
 import { tsPhotoUtilsConfiguration } from '../config';
 
@@ -97,3 +98,42 @@ const addTakeoutFileByImageDimensions = (takeoutFilesByDimensions: IdToStringArr
   }
 }
 
+export const testJob = async () => {
+
+  let foundMatchingMetadataFiles = 0;
+  let missingMatchingMetadataFiles = 0;
+  const duplicateFileNames: string[] = [];
+
+  // const imageFilePaths: string[] = getImageFilePaths(tsPhotoUtilsConfiguration.MEDIA_ITEMS_DIR);
+
+  const jsonFilePaths: string[] = await getJsonFilePaths(tsPhotoUtilsConfiguration.MEDIA_ITEMS_DIR);
+  const jsonFilePathsByFileName: any = {};
+  for (const jsonFilePath of jsonFilePaths) {
+    const fileName = path.basename(jsonFilePath);
+    const jsonFileName = fileName + '.json';
+    if (jsonFilePathsByFileName.hasOwnProperty(jsonFileName)) {
+      duplicateFileNames.push(jsonFileName);
+    } else {
+      jsonFilePathsByFileName[fileName] = jsonFilePath;
+    }
+  }
+
+  const takeoutFilesByFileName = await getJsonFromFile(
+    isomorphicPath.join(tsPhotoUtilsConfiguration.DATA_DIR, tsPhotoUtilsConfiguration.TAKEOUT_FILES_BY_FILE_NAME));
+
+  for (const takeoutFileName in takeoutFilesByFileName) {
+    if (Object.prototype.hasOwnProperty.call(takeoutFilesByFileName, takeoutFileName)) {
+      const takeoutMetadataFileName = takeoutFileName + '.json';
+      if (jsonFilePathsByFileName.hasOwnProperty(takeoutMetadataFileName)) {
+        foundMatchingMetadataFiles++;
+      } else {
+        missingMatchingMetadataFiles++;
+      }
+    }
+  }
+
+  console.log('foundMatchingMetadataFiles', foundMatchingMetadataFiles);
+  console.log('missingMatchingMetadataFiles', missingMatchingMetadataFiles);
+  console.log('duplicateFileNamesCount', duplicateFileNames.length);
+  console.log('duplicateFileNames', duplicateFileNames);
+}

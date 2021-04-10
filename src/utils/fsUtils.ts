@@ -13,8 +13,25 @@ const imageFileExtensions = ['.jpg', '.JPG', '.jpeg', '.JPEG', '.png', '.PNG', '
 //   [key: string]: MatchedPhoto[]
 // }
 
-const getFilesInDirectory = (rootDirPath: string) => {
+const getFilesInDirectory = (rootDirPath: string): string[] => {
   return nodeDir.files(rootDirPath, { sync: true });
+}
+
+export const getJsonFilePaths = async (rootPath: string): Promise<string[]> => {
+  return new Promise( (resolve, reject) => {
+    nodeDir.readFiles(rootPath, {
+    match: /.json$/,
+    }, function(err, content, next) {
+        if (err) throw err;
+        // console.log('content:', content);
+        next();
+    },
+    function(err, files){
+        if (err) throw err;
+        console.log('finished reading files:',files);
+        return resolve(files);
+    });
+  });
 }
 
 export const getImageFilePaths = (rootPath: string): string[] => {
@@ -36,7 +53,7 @@ export const getJsonFromFile = async (filePath: string): Promise<any> => {
   const fileContents: string = await readStream(readFileStream);
   try {
     const jsonObject: any = JSON.parse(fileContents);
-    return jsonObject;  
+    return jsonObject;
   } catch (error: any) {
     return {};
   }
@@ -91,14 +108,14 @@ export const writeJsonToFile = async (filePath: string, jsonData: any): Promise<
     const jsonContent = JSON.stringify(jsonData, null, 2);
     fs.writeFile(filePath, jsonContent, 'utf8', function (err) {
       if (err) {
-          console.log("An error occured while writing JSON Object to File.");
-          console.log(err);
-          return reject(err);
+        console.log("An error occured while writing JSON Object to File.");
+        console.log(err);
+        return reject(err);
       }
-   
+
       console.log("JSON file has been saved.");
       return resolve(true);
-  });
+    });
   })
 }
 
