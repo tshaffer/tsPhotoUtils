@@ -24,7 +24,8 @@ export const readConfig = (pathToConfigFile: string): void => {
         TAKEOUT_FILES_BY_DATE_TIME_ORIGINAL: parsedConfig.TAKEOUT_FILES_BY_DATE_TIME_ORIGINAL,
         TAKEOUT_FILES_BY_MODIFY_DATE: parsedConfig.TAKEOUT_FILES_BY_MODIFY_DATE,
         TAKEOUT_FILES_BY_IMAGE_DIMENSIONS: parsedConfig.TAKEOUT_FILES_BY_IMAGE_DIMENSIONS,
-
+        FILE_PATHS_TO_EXIF_TAGS: parsedConfig.FILE_PATHS_TO_EXIF_TAGS,
+        METADATA_FILE_PATH_BY_TAKEOUT_FILE_PATH: parsedConfig.METADATA_FILE_PATH_BY_TAKEOUT_FILE_PATH,
       };
       console.log(tsPhotoUtilsConfiguration);
     }

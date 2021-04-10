@@ -21,7 +21,8 @@ import {
   getAddedGoogleMediaItems,
   getRemovedGoogleMediaItems,
   buildTakeoutFileMaps,
-  testJob,
+  buildMetadataFileMap,
+  compareGPSTags,
 } from './jobs';
 import { readConfig } from './config';
 // import commandLineArgs from 'command-line-args';
@@ -29,8 +30,6 @@ import { readConfig } from './config';
 interface FilePathToExifTags {
   [key: string]: Tags;
 }
-
-let filePathsToExifTags: FilePathToExifTags = {};
 
 readConfig('/Users/tedshaffer/Documents/Projects/tsPhotoUtils/src/config/config.env');
 
@@ -41,28 +40,16 @@ const commandLineArgs = require('command-line-args')
 const options = commandLineArgs(optionDefinitions)
 console.log(options);
 
-const readFilePathsToExifTags = async () => {
-  filePathsToExifTags = await getJsonFromFile('/Users/tedshaffer/Documents/Projects/tsPhotoUtils/data/filePathsToExifTags.json');
-}
+// const readFilePathsToExifTags = async () => {
+//   filePathsToExifTags = await getJsonFromFile('/Users/tedshaffer/Documents/Projects/tsPhotoUtils/data/filePathsToExifTags.json');
+// }
 
-const writeFilePathsToExifTags = async (filePath: string) => {
-  const filePathsToExifTagsStream: any = openWriteStream(filePath);
-  const filePathsToExifTagsAsStr = JSON.stringify(filePathsToExifTags);
-  await writeToWriteStream(filePathsToExifTagsStream, filePathsToExifTagsAsStr);
-  await closeStream(filePathsToExifTagsStream);
-}
-
-const retrieveExifData = async (filePath: string): Promise<Tags> => {
-  let exifData: Tags;
-  if (filePathsToExifTags.hasOwnProperty(filePath)) {
-    exifData = filePathsToExifTags[filePath];
-  } else {
-    exifData = await getExifData(filePath);
-    filePathsToExifTags[filePath] = exifData;
-    // writeFilePathsToExifTags('/Users/tedshaffer/Documents/Projects/tsPhotoUtils/data/filePathsToExifTagsNew.json')
-  }
-  return exifData;
-}
+// const writeFilePathsToExifTags = async (filePath: string) => {
+//   const filePathsToExifTagsStream: any = openWriteStream(filePath);
+//   const filePathsToExifTagsAsStr = JSON.stringify(filePathsToExifTags);
+//   await writeToWriteStream(filePathsToExifTagsStream, filePathsToExifTagsAsStr);
+//   await closeStream(filePathsToExifTagsStream);
+// }
 
 const newDbFromOldDbAndTakeout = async (): Promise<any> => {
 
@@ -204,9 +191,13 @@ async function main() {
       console.log('BuildTakeoutFileMaps');
       await buildTakeoutFileMaps();
       break;
-    case Jobs.TestJob:
+    case Jobs.BuildMetadataFileMap:
       console.log('TestJob');
-      await testJob();
+      await buildMetadataFileMap();
+      break;
+    case Jobs.CompareGPSTags:
+      console.log('CompareGPSTags');
+      await compareGPSTags();
       break;
     default:
       console.log(options.job + ' not supported.');

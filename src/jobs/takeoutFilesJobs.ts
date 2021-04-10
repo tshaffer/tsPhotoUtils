@@ -1,4 +1,4 @@
-import { isNumber, isString } from 'lodash';
+import { isNil, isNumber, isString } from 'lodash';
 import path from 'path';
 import isomorphicPath from 'isomorphic-path';
 import {
@@ -7,8 +7,121 @@ import {
 
 import { getExifData } from '../controllers';
 import { getDateTimeSinceZero, getImageFilePaths, getJsonFilePaths, getJsonFromFile, writeJsonToFile } from '../utils';
-import { IdToStringArray } from '../types';
+import { IdToString, IdToStringArray } from '../types';
 import { tsPhotoUtilsConfiguration } from '../config';
+
+interface FilePathToExifTags {
+  [key: string]: Tags;
+}
+let filePathsToExifTags: FilePathToExifTags = {};
+
+export const compareGPSTags = async () => {
+
+  let bothHaveGpsCount = 0;
+  let takeoutHasGpsCount = 0;
+  let metadataHasGpsCount = 0;
+  let neitherHaveGpsCount = 0;
+
+  const filePathsToExifTags: FilePathToExifTags = await getJsonFromFile(
+    isomorphicPath.join(tsPhotoUtilsConfiguration.DATA_DIR, tsPhotoUtilsConfiguration.FILE_PATHS_TO_EXIF_TAGS));
+  const metadataFilePathByTakeoutFilePath: IdToString = await getJsonFromFile(
+    isomorphicPath.join(tsPhotoUtilsConfiguration.DATA_DIR, tsPhotoUtilsConfiguration.METADATA_FILE_PATH_BY_TAKEOUT_FILE_PATH));
+
+  for (const filePath in filePathsToExifTags) {
+    if (Object.prototype.hasOwnProperty.call(filePathsToExifTags, filePath)) {
+      if (metadataFilePathByTakeoutFilePath.hasOwnProperty(filePath)) {
+        const takeoutFileTags: Tags = filePathsToExifTags[filePath];
+        const metadataFilePath: string = metadataFilePathByTakeoutFilePath[filePath];
+        const metadata: any = await getJsonFromFile(metadataFilePath);
+
+        // if (!isNil(metadata.geoData.latitude) && metadata.geoData.latitude === 0) {
+        //   debugger;
+        // }
+
+        if (!isNil(takeoutFileTags.GPSLatitude)) {
+          if (!isNil(metadata.geoData.latitude) && metadata.geoData.latitude !== 0) {
+            bothHaveGpsCount++;
+          } else {
+            takeoutHasGpsCount++;
+          }
+        } else {
+          if (isNil(metadata.geoData.latitude) || metadata.geoData.latitude === 0) {
+            neitherHaveGpsCount++;
+          } else {
+            metadataHasGpsCount++;
+          }
+        }
+      }
+    }
+  }
+
+  console.log('bothHaveGpsCount', bothHaveGpsCount);
+  console.log('takeoutHasGpsCount', takeoutHasGpsCount);
+  console.log('metadataHasGpsCount', metadataHasGpsCount);
+  console.log('neitherHaveGpsCount', neitherHaveGpsCount);
+}
+
+export const buildMetadataFileMap = async () => {
+
+  const metadataFilePathByTakeoutFilePath: IdToString = {};
+
+  let foundMatchingMetadataFiles = 0;
+  let missingMatchingMetadataFiles = 0;
+
+  const metadataFilePaths: string[] = await getJsonFilePaths(tsPhotoUtilsConfiguration.MEDIA_ITEMS_DIR);
+  const metadataFilePathsByFilePath: any = {};
+  for (const metadataFilePath of metadataFilePaths) {
+
+    const indexOfGooglePhotos = metadataFilePath.lastIndexOf('Google Photos');
+    const indexOfUniqueFilePath = indexOfGooglePhotos + 14;
+    const uniqueFilePath = metadataFilePath.substring(indexOfUniqueFilePath);
+
+    metadataFilePathsByFilePath[uniqueFilePath] = {
+      uniqueFilePath,
+      metadataFilePath,
+    };
+  }
+
+  const takeoutFilesByFileName: IdToStringArray = await getJsonFromFile(
+    isomorphicPath.join(tsPhotoUtilsConfiguration.DATA_DIR, tsPhotoUtilsConfiguration.TAKEOUT_FILES_BY_FILE_NAME));
+
+  for (const key in takeoutFilesByFileName) {
+    if (Object.prototype.hasOwnProperty.call(takeoutFilesByFileName, key)) {
+      const takeoutFilePaths: string[] = takeoutFilesByFileName[key];
+      for (const takeoutFilePath of takeoutFilePaths) {
+
+        const indexOfGooglePhotos = takeoutFilePath.lastIndexOf('Google Photos');
+        const indexOfUniqueFilePath = indexOfGooglePhotos + 14;
+        const uniqueFilePath = takeoutFilePath.substring(indexOfUniqueFilePath);
+
+        const takeoutMetadataFilePath = uniqueFilePath + '.json';
+        if (metadataFilePathsByFilePath.hasOwnProperty(takeoutMetadataFilePath)) {
+          foundMatchingMetadataFiles++;
+          const element = metadataFilePathsByFilePath[takeoutMetadataFilePath];
+          metadataFilePathByTakeoutFilePath[takeoutFilePath] = element.metadataFilePath;
+        } else {
+          missingMatchingMetadataFiles++;
+        }
+      }
+    }
+  }
+
+  await writeJsonToFile(
+    isomorphicPath.join(tsPhotoUtilsConfiguration.DATA_DIR, tsPhotoUtilsConfiguration.METADATA_FILE_PATH_BY_TAKEOUT_FILE_PATH),
+    metadataFilePathByTakeoutFilePath);
+}
+
+
+const retrieveExifData = async (filePath: string): Promise<Tags> => {
+  let exifData: Tags;
+  if (filePathsToExifTags.hasOwnProperty(filePath)) {
+    exifData = filePathsToExifTags[filePath];
+  } else {
+    exifData = await getExifData(filePath);
+    filePathsToExifTags[filePath] = exifData;
+  }
+  return exifData;
+}
 
 export const buildTakeoutFileMaps = async () => {
 
@@ -24,7 +137,7 @@ export const buildTakeoutFileMaps = async () => {
 
   for (let filePath of filePaths) {
 
-    const exifData: Tags = await getExifData(filePath);
+    const exifData: Tags = await retrieveExifData(filePath);
 
     addTakeoutFileByFileName(takeoutFilesByFileName, filePath, exifData.FileName);
     addTakeoutFileByDate(takeoutFilesByCreateDate, filePath, exifData.CreateDate);
@@ -64,6 +177,9 @@ export const buildTakeoutFileMaps = async () => {
   await writeJsonToFile(
     isomorphicPath.join(tsPhotoUtilsConfiguration.DATA_DIR, tsPhotoUtilsConfiguration.TAKEOUT_FILES_BY_IMAGE_DIMENSIONS),
     takeoutFilesByImageDimensions);
+  await writeJsonToFile(
+    isomorphicPath.join(tsPhotoUtilsConfiguration.DATA_DIR, tsPhotoUtilsConfiguration.FILE_PATHS_TO_EXIF_TAGS),
+    filePathsToExifTags);
 }
 
 const addTakeoutFileByFileName = (takeoutFilesByFileName: IdToStringArray, filePath: string, fileName: string) => {
@@ -96,56 +212,6 @@ const addTakeoutFileByImageDimensions = (takeoutFilesByDimensions: IdToStringArr
     }
     takeoutFilesByDimensions[key].push(filePath);
   }
-}
-
-export const testJob = async () => {
-
-  const metadataFilePathByTakeoutFilePath: any = {};
-
-  let foundMatchingMetadataFiles = 0;
-  let missingMatchingMetadataFiles = 0;
-
-  const metadataFilePaths: string[] = await getJsonFilePaths(tsPhotoUtilsConfiguration.MEDIA_ITEMS_DIR);
-  const metadataFilePathsByFilePath: any = {};
-  for (const metadataFilePath of metadataFilePaths) {
-
-    const indexOfGooglePhotos = metadataFilePath.lastIndexOf('Google Photos');
-    const indexOfUniqueFilePath = indexOfGooglePhotos + 14;
-    const uniqueFilePath = metadataFilePath.substring(indexOfUniqueFilePath);
-
-    metadataFilePathsByFilePath[uniqueFilePath] = {
-      uniqueFilePath,
-      metadataFilePath,
-    };
-  }
-
-  const takeoutFilesByFileName: IdToStringArray = await getJsonFromFile(
-    isomorphicPath.join(tsPhotoUtilsConfiguration.DATA_DIR, tsPhotoUtilsConfiguration.TAKEOUT_FILES_BY_FILE_NAME));
-
-  for (const key in takeoutFilesByFileName) {
-    if (Object.prototype.hasOwnProperty.call(takeoutFilesByFileName, key)) {
-      const takeoutFilePaths: string[] = takeoutFilesByFileName[key];
-      for (const takeoutFilePath of takeoutFilePaths) {
-
-        const indexOfGooglePhotos = takeoutFilePath.lastIndexOf('Google Photos');
-        const indexOfUniqueFilePath = indexOfGooglePhotos + 14;
-        const uniqueFilePath = takeoutFilePath.substring(indexOfUniqueFilePath);
-    
-        const takeoutMetadataFilePath = uniqueFilePath + '.json';
-        if (metadataFilePathsByFilePath.hasOwnProperty(takeoutMetadataFilePath)) {
-          foundMatchingMetadataFiles++;
-          const element = metadataFilePathsByFilePath[takeoutMetadataFilePath];
-          metadataFilePathByTakeoutFilePath[takeoutFilePath] = element.metadataFilePath;
-        } else {
-          missingMatchingMetadataFiles++;
-        }
-      }
-    }
-  }
-
-  console.log('foundMatchingMetadataFiles', foundMatchingMetadataFiles);
-  console.log('missingMatchingMetadataFiles', missingMatchingMetadataFiles);
-  console.log(metadataFilePathByTakeoutFilePath);
 }
 
 export const testJob0 = async () => {
@@ -187,3 +253,4 @@ export const testJob0 = async () => {
   console.log('duplicateFileNamesCount', duplicateFileNames.length);
   console.log('duplicateFileNames', duplicateFileNames);
 }
+
