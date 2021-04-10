@@ -25,6 +25,7 @@ import {
   compareGPSTags,
 } from './jobs';
 import { readConfig } from './config';
+import { checkMetadataInNewFiles } from './jobs/stats';
 // import commandLineArgs from 'command-line-args';
 
 interface FilePathToExifTags {
@@ -198,6 +199,10 @@ async function main() {
     case Jobs.CompareGPSTags:
       console.log('CompareGPSTags');
       await compareGPSTags();
+      break;
+    case Jobs.CheckMetadataInNewFiles:
+      console.log('CheckMetadataInNewFiles');
+      await checkMetadataInNewFiles();
       break;
     default:
       console.log(options.job + ' not supported.');

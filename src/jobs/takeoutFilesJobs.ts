@@ -7,12 +7,9 @@ import {
 
 import { getExifData } from '../controllers';
 import { getDateTimeSinceZero, getImageFilePaths, getJsonFilePaths, getJsonFromFile, writeJsonToFile } from '../utils';
-import { IdToString, IdToStringArray } from '../types';
+import { FilePathToExifTags, IdToString, IdToStringArray } from '../types';
 import { tsPhotoUtilsConfiguration } from '../config';
 
-interface FilePathToExifTags {
-  [key: string]: Tags;
-}
 let filePathsToExifTags: FilePathToExifTags = {};
 
 export const compareGPSTags = async () => {

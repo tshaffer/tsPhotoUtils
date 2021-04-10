@@ -1,3 +1,5 @@
+import { Tags } from "exiftool-vendored"
+
 export type IdToAnyArray = {
   [key: string]: any[]
 }
@@ -10,6 +12,10 @@ export type IdToString = {
   [key: string]: string
 }
 
+export interface FilePathToExifTags {
+  [key: string]: Tags;
+}
+
 export enum Jobs {
   BuildGoogleMediaItemsById = 'BuildGoogleMediaItemsById',
   GetAddedGoogleMediaItems = 'GetAddedGoogleMediaItems',
@@ -18,6 +24,7 @@ export enum Jobs {
   BuildTakeoutFileMaps = 'BuildTakeoutFileMaps',
   BuildMetadataFileMap = 'BuildMetadataFileMap',
   CompareGPSTags = 'CompareGPSTags',
+  CheckMetadataInNewFiles = 'CheckMetadataInNewFiles',
   Db = 'Db',
   TestJob = 'TestJob',
 }
