@@ -23,6 +23,7 @@ import {
   buildTakeoutFileMaps,
   buildMetadataFileMap,
   compareGPSTags,
+  migrateAndUpdate,
 } from './jobs';
 import { readConfig } from './config';
 import { checkMetadataInNewFiles } from './jobs/stats';
@@ -203,6 +204,10 @@ async function main() {
     case Jobs.CheckMetadataInNewFiles:
       console.log('CheckMetadataInNewFiles');
       await checkMetadataInNewFiles();
+      break;
+    case Jobs.MigrateAndUpdate:
+      console.log('MigrateAndUpdate');
+      await migrateAndUpdate();
       break;
     default:
       console.log(options.job + ' not supported.');

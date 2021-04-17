@@ -1,4 +1,5 @@
 import { Tags } from "exiftool-vendored"
+import { MediaItem } from './entities';
 
 export type IdToAnyArray = {
   [key: string]: any[]
@@ -26,6 +27,7 @@ export enum Jobs {
   CompareGPSTags = 'CompareGPSTags',
   CheckMetadataInNewFiles = 'CheckMetadataInNewFiles',
   Db = 'Db',
+  MigrateAndUpdate = 'MigrateAndUpdate',
   TestJob = 'TestJob',
 }
 
@@ -45,3 +47,28 @@ export interface TsPhotoUtilsConfiguration {
   FILE_PATHS_TO_EXIF_TAGS: string;
   METADATA_FILE_PATH_BY_TAKEOUT_FILE_PATH: string;
 }
+
+interface MatchedMediaItem {
+  takeoutFilePath: string;
+  mediaItem: MediaItem;
+}
+
+
+export type IdToMatchedMediaItem = {
+  [key: string]: MatchedMediaItem;
+}
+
+export type IdToMediaItems = {
+  [key: string]: MediaItem[]
+}
+
+export type IdToMediaItem = {
+  [key: string]: MediaItem
+}
+
+export interface MatchFileNameResults {
+  matchedMediaItems: IdToMatchedMediaItem;
+  unmatchedMediaItems: IdToMediaItem;
+  mediaItemsToMultipleTakeoutFiles: IdToStringArray;
+}
+

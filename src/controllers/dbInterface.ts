@@ -24,8 +24,8 @@ export const getAllLegacyMediaItems = async (): Promise<LegacyMediaItem[]> => {
   const legacyMediaItemModel = getLegacyMediaitemModel();
 
   const records: LegacyMediaItem[] = [];
-  // const documents: any = await (legacyMediaItemModel as any).find().limit(100).exec();
-  const documents: any = await (legacyMediaItemModel as any).find().exec();
+  const documents: any = await (legacyMediaItemModel as any).find().limit(100).exec();
+  // const documents: any = await (legacyMediaItemModel as any).find().exec();
   // const documents: any = await (legacyMediaItemModel as any).find({ fileName: 'IMG_4726.PNG' }).exec();
   for (const document of documents) {
     const legacyMediaItem: LegacyMediaItem = document.toObject() as LegacyMediaItem;

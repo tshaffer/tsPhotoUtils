@@ -39,3 +39,9 @@ export interface MatchedGoogleMediaItem {
   takeoutFilePath: string;
   googleMediaItem: GoogleMediaItem;
 }
+
+export type IdToGoogleMediaItem = {
+  [key: string]: GoogleMediaItem
+}
+
+

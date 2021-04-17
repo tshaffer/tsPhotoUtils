@@ -5,12 +5,9 @@ import {
   Tags
 } from 'exiftool-vendored';
 
-import { getExifData } from '../controllers';
-import { getDateTimeSinceZero, getImageFilePaths, getJsonFilePaths, getJsonFromFile, writeJsonToFile } from '../utils';
+import { filePathsToExifTags, getDateTimeSinceZero, getImageFilePaths, getJsonFilePaths, getJsonFromFile, retrieveExifData, writeJsonToFile } from '../utils';
 import { FilePathToExifTags, IdToString, IdToStringArray } from '../types';
 import { tsPhotoUtilsConfiguration } from '../config';
-
-let filePathsToExifTags: FilePathToExifTags = {};
 
 export const compareGPSTags = async () => {
 
@@ -62,9 +59,6 @@ export const buildMetadataFileMap = async () => {
 
   const metadataFilePathByTakeoutFilePath: IdToString = {};
 
-  let foundMatchingMetadataFiles = 0;
-  let missingMatchingMetadataFiles = 0;
-
   const metadataFilePaths: string[] = await getJsonFilePaths(tsPhotoUtilsConfiguration.MEDIA_ITEMS_DIR);
   const metadataFilePathsByFilePath: any = {};
   for (const metadataFilePath of metadataFilePaths) {
@@ -93,11 +87,8 @@ export const buildMetadataFileMap = async () => {
 
         const takeoutMetadataFilePath = uniqueFilePath + '.json';
         if (metadataFilePathsByFilePath.hasOwnProperty(takeoutMetadataFilePath)) {
-          foundMatchingMetadataFiles++;
           const element = metadataFilePathsByFilePath[takeoutMetadataFilePath];
           metadataFilePathByTakeoutFilePath[takeoutFilePath] = element.metadataFilePath;
-        } else {
-          missingMatchingMetadataFiles++;
         }
       }
     }
@@ -108,17 +99,6 @@ export const buildMetadataFileMap = async () => {
     metadataFilePathByTakeoutFilePath);
 }
 
-
-const retrieveExifData = async (filePath: string): Promise<Tags> => {
-  let exifData: Tags;
-  if (filePathsToExifTags.hasOwnProperty(filePath)) {
-    exifData = filePathsToExifTags[filePath];
-  } else {
-    exifData = await getExifData(filePath);
-    filePathsToExifTags[filePath] = exifData;
-  }
-  return exifData;
-}
 
 export const buildTakeoutFileMaps = async () => {
 

@@ -22,3 +22,6 @@ export const getDateTimeSinceZero = (dt: any): number => {
   return ts;
 }
 
+export const roundToNearestTenth = (valIn: number): number => {
+  return Math.round(valIn * 10) / 10;
+}
