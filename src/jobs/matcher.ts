@@ -1,7 +1,18 @@
 import path from 'path';
 import { isNil, isNumber, isObject, isString } from 'lodash';
 import isomorphicPath from 'isomorphic-path';
-import { GoogleMediaItem, GoogleMediaMetadata, GooglePhoto, IdToGoogleMediaItem, IdToGoogleMediaItemArray, IdToGoogleMediaItems, IdToMatchedGoogleMediaItem, IdToMatchedMediaItem, IdToMediaItem, IdToMediaItems, IdToStringArray, LegacyMediaItem, MatchFileNameResults, MatchToDateTimeResults, MediaItem } from '../types';
+import { 
+  GoogleMediaItem, 
+  IdToGoogleMediaItemArray, 
+  IdToGoogleMediaItems, 
+  IdToMatchedMediaItem, 
+  IdToMediaItem, 
+  IdToStringArray, 
+  LegacyMediaItem, 
+  MatchFileNameResults, 
+  MatchToDateTimeResults, 
+  MediaItem
+ } from '../types';
 import { getJsonFromFile, retrieveExifData, roundToNearestTenth } from '../utils';
 import { tsPhotoUtilsConfiguration } from '../config';
 import { Tags } from 'exiftool-vendored';
@@ -18,7 +29,7 @@ type IdToTakeoutFilesByTimeOfDay = {
 }
 
 interface FirstPassResults {
-  matchedGoogleMediaItems: IdToMatchedGoogleMediaItem;
+  matchedGoogleMediaItems: IdToMatchedMediaItem;
   unmatchedGoogleMediaItems: IdToGoogleMediaItems;
   googleMediaItemsToMultipleTakeoutFiles: IdToStringArray;
 }
@@ -48,7 +59,8 @@ export const migrateAndUpdate = async (): Promise<void> => {
 
   const itemsToMigrate: IdToMediaItem = await getItemsToMigrate();
 
-  await getMatchingTakeoutFiles(itemsToMigrate);
+  const matchedMediaItems: IdToMatchedMediaItem = await getMatchingTakeoutFiles(itemsToMigrate);
+  console.log(matchedMediaItems);
 }
 
 const getItemsToMigrate = async (): Promise<IdToMediaItem> => {
@@ -86,7 +98,7 @@ const getItemsToMigrate = async (): Promise<IdToMediaItem> => {
   return itemsToMigrate;
 }
 
-const getMatchingTakeoutFiles = async (mediaItemsToMigrate: IdToMediaItem): Promise<void> => {
+const getMatchingTakeoutFiles = async (mediaItemsToMigrate: IdToMediaItem): Promise<IdToMatchedMediaItem> => {
 
   const takeoutFilesByFileName: IdToStringArray = await getJsonFromFile(
     isomorphicPath.join(tsPhotoUtilsConfiguration.DATA_DIR, tsPhotoUtilsConfiguration.TAKEOUT_FILES_BY_FILE_NAME));
@@ -101,7 +113,15 @@ const getMatchingTakeoutFiles = async (mediaItemsToMigrate: IdToMediaItem): Prom
 
   const thirdPassResults: ThirdPassResults = await matchPhotosToTakeoutPhotos_3(
     takeoutFilesByFileName, matchedMediaItems, stillUnmatchedMediaItems);
+  const { remainingUnmatchedMediaItemsNoFileNameMatches, remainingUnmatchedMediaItemsMultipleFileNameMatches } = thirdPassResults;
 
+  const mediaItemsWhereAtLeastOneTakeoutFileHasGps: IdToMediaItem = await matchPhotosToTakeoutPhotos_4(takeoutFilesByFileName, thirdPassResults.remainingUnmatchedMediaItemsMultipleFileNameMatches);
+
+  await matchPhotosToTakeoutPhotos_5(takeoutFilesByFileName, matchedMediaItems, mediaItemsWhereAtLeastOneTakeoutFileHasGps);
+
+  matchPhotosToTakeoutPhotos_6(takeoutFilesByFileName, matchedMediaItems, thirdPassResults.remainingUnmatchedMediaItemsNoFileNameMatches);
+
+  return matchedMediaItems;
 }
 
 const matchToFileNames = async (
@@ -281,6 +301,135 @@ const matchPhotosToTakeoutPhotos_3 = async (
 
   return results;
 }
+
+const matchPhotosToTakeoutPhotos_4 = async (
+  takeoutFilesByFileName: IdToStringArray,
+  remainingUnmatchedMediaItemsMultipleFileNameMatches: MediaItem[],
+): Promise<IdToMediaItem> => {
+
+  let filesWithGPSAndDateData = 0;
+  let filesWithGPSButNoDateCount = 0;
+  const mediaItemsWithGPSButNoDateFile: MediaItem[] = [];
+  const filesWithGPSButNoDate: string[] = [];
+  const mediaItemsWithOnlyOneThatHasNoDateTime: MediaItem[] = [];
+  const filesThatAreOnlyOneWithNoDateTime: string[] = [];
+  const filesWithNoDateTimeHaveGPS: boolean[] = [];
+  let filesWithNoDateTimeHaveGPSCount = 0;
+  let fileWithNoDateTime;
+
+  let filesWithNoDateTimeCount = 0;
+  let filesWithMultipleDateTimeCount = 0;
+  let filesWithZeroDateTimeCount = 0;
+
+  let atLeastOneTakeoutFileHasGpsForMediaItemCount = 0;
+  const mediaItemsWhereAtLeastOneTakeoutFileHasGps: IdToMediaItem = {};
+
+  for (const mediaItem of remainingUnmatchedMediaItemsMultipleFileNameMatches) {
+    const takeoutFilesWithSameFileName: string[] = takeoutFilesByFileName[mediaItem.fileName];
+    let filesWithNoDateTime = 0;
+    let fileWithNoDateTimeHasGPS = false;
+    let oneOfTakeoutFilesHasGps = false;
+    for (const takeoutFilePath of takeoutFilesWithSameFileName) {
+      const exifData: Tags = await retrieveExifData(takeoutFilePath);
+      if (!isNil(exifData.GPSLatitude)) {
+        oneOfTakeoutFilesHasGps = true;
+      }
+      if (isNil(exifData.CreateDate) && isNil(exifData.DateTimeOriginal) && isNil(exifData.ModifyDate)) {
+        filesWithNoDateTime++;
+        fileWithNoDateTimeHasGPS = !isNil(exifData.GPSLatitude);
+        fileWithNoDateTime = takeoutFilePath;
+        if (!isNil(exifData.GPSLatitude)) {
+          mediaItemsWithGPSButNoDateFile.push(mediaItem);
+          filesWithGPSButNoDate.push(takeoutFilePath);
+          filesWithGPSButNoDateCount++;
+        }
+      } else if (!isNil(exifData.GPSLatitude)) {
+        filesWithGPSAndDateData++;
+      }
+    }
+    if (filesWithNoDateTime === 1) {
+      mediaItemsWithOnlyOneThatHasNoDateTime.push(mediaItem);
+      filesThatAreOnlyOneWithNoDateTime.push(fileWithNoDateTime);
+      filesWithNoDateTimeHaveGPS.push(fileWithNoDateTimeHasGPS);
+      if (fileWithNoDateTimeHasGPS) {
+        filesWithNoDateTimeHaveGPSCount++;
+      }
+      filesWithNoDateTimeCount++;
+    } else if (filesWithNoDateTime === 0) {
+      filesWithZeroDateTimeCount++;
+    } else {
+      filesWithMultipleDateTimeCount++;
+    }
+
+    if (oneOfTakeoutFilesHasGps) {
+      atLeastOneTakeoutFileHasGpsForMediaItemCount++;
+      mediaItemsWhereAtLeastOneTakeoutFileHasGps[mediaItem.googleId] = mediaItem;
+    }
+  }
+
+  return mediaItemsWhereAtLeastOneTakeoutFileHasGps;
+}
+
+const matchPhotosToTakeoutPhotos_5 = async (
+  takeoutFilesByFileName: IdToStringArray,
+  matchedMediaItems: IdToMatchedMediaItem,
+  mediaItemsWhereAtLeastOneTakeoutFileHasGps: IdToMediaItem,
+): Promise<void> => {
+
+  for (const key in mediaItemsWhereAtLeastOneTakeoutFileHasGps) {
+    if (Object.prototype.hasOwnProperty.call(mediaItemsWhereAtLeastOneTakeoutFileHasGps, key)) {
+      const mediaItem: MediaItem = mediaItemsWhereAtLeastOneTakeoutFileHasGps[key];
+      if (takeoutFilesByFileName.hasOwnProperty(mediaItem.fileName)) {
+        const takeoutFilePaths: string[] = takeoutFilesByFileName[mediaItem.fileName];
+        for (const takeoutFilePath of takeoutFilePaths) {
+          const exifData: Tags = await retrieveExifData(takeoutFilePath);
+          if (!isNil(exifData.GPSLatitude)) {
+            const hasDateTime: boolean = !isNil(exifData.CreateDate) || !isNil(exifData.DateTimeOriginal) || !isNil(exifData.ModifyDate);
+            if (!hasDateTime) {
+              matchedMediaItems[key] = {
+                takeoutFilePath,
+                mediaItem,
+              };
+            }
+          }
+        }
+      }
+      else {
+        debugger;
+      }
+    }
+  }
+}
+
+const matchPhotosToTakeoutPhotos_6 = (
+  takeoutFilesByFileName: IdToStringArray,
+  matchedMediaItems: IdToMatchedMediaItem,
+  remainingUnmatchedMediaItemsNoFileNameMatches: any,
+) => {
+  for (const mediaItem of remainingUnmatchedMediaItemsNoFileNameMatches) {
+    const fileName = mediaItem.filename;
+    const fileExtension: string = path.extname(fileName);
+
+    const filePathWithoutExtension = fileName.split('.').slice(0, -1).join('.');
+
+    const filePathWithUpperCaseExtension = filePathWithoutExtension + fileExtension.toUpperCase();
+    if (takeoutFilesByFileName.hasOwnProperty(filePathWithUpperCaseExtension)) {
+      matchedMediaItems[mediaItem.id] = {
+        takeoutFilePath: filePathWithUpperCaseExtension,
+        mediaItem,
+      };
+    }
+
+    const filePathWithLowerCaseExtension = filePathWithoutExtension + fileExtension.toLowerCase();
+    if (takeoutFilesByFileName.hasOwnProperty(filePathWithLowerCaseExtension)) {
+      matchedMediaItems[mediaItem.id] = {
+        takeoutFilePath: filePathWithLowerCaseExtension,
+        mediaItem,
+      };
+    }
+  }
+}
+
 
 
 const trimUnimportantMediaItems = async (mediaItemsToMigrate: IdToMediaItem) => {
