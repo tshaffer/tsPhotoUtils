@@ -72,3 +72,7 @@ export interface MatchFileNameResults {
   mediaItemsToMultipleTakeoutFiles: IdToStringArray;
 }
 
+export interface MatchToDateTimeResults {
+  unmatchedMediaItems: MediaItem[];
+}
+
