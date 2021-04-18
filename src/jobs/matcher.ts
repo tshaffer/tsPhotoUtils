@@ -61,6 +61,7 @@ export const migrateAndUpdate = async (): Promise<void> => {
 
   const matchedMediaItems: IdToMatchedMediaItem = await getMatchingTakeoutFiles(itemsToMigrate);
   console.log(matchedMediaItems);
+  console.log('complete');
 }
 
 const getItemsToMigrate = async (): Promise<IdToMediaItem> => {
@@ -74,9 +75,6 @@ const getItemsToMigrate = async (): Promise<IdToMediaItem> => {
 
   for (const legacyMediaItem of legacyMediaItems) {
     if (googleMediaItemsById.hasOwnProperty(legacyMediaItem.id)) {
-
-      // TEDTODO - take the first one?
-      const googleMediaItem: GoogleMediaItem = googleMediaItemsById[legacyMediaItem.id][0];
 
       // TEDTODO - validate that all properties in googleMediaItem match properties in legacyMediaItem
       const mediaItem: MediaItem = {
@@ -115,11 +113,11 @@ const getMatchingTakeoutFiles = async (mediaItemsToMigrate: IdToMediaItem): Prom
     takeoutFilesByFileName, matchedMediaItems, stillUnmatchedMediaItems);
   const { remainingUnmatchedMediaItemsNoFileNameMatches, remainingUnmatchedMediaItemsMultipleFileNameMatches } = thirdPassResults;
 
-  const mediaItemsWhereAtLeastOneTakeoutFileHasGps: IdToMediaItem = await matchPhotosToTakeoutPhotos_4(takeoutFilesByFileName, thirdPassResults.remainingUnmatchedMediaItemsMultipleFileNameMatches);
+  const mediaItemsWhereAtLeastOneTakeoutFileHasGps: IdToMediaItem = await matchPhotosToTakeoutPhotos_4(takeoutFilesByFileName, remainingUnmatchedMediaItemsMultipleFileNameMatches);
 
   await matchPhotosToTakeoutPhotos_5(takeoutFilesByFileName, matchedMediaItems, mediaItemsWhereAtLeastOneTakeoutFileHasGps);
 
-  matchPhotosToTakeoutPhotos_6(takeoutFilesByFileName, matchedMediaItems, thirdPassResults.remainingUnmatchedMediaItemsNoFileNameMatches);
+  matchPhotosToTakeoutPhotos_6(takeoutFilesByFileName, matchedMediaItems, remainingUnmatchedMediaItemsNoFileNameMatches);
 
   return matchedMediaItems;
 }
@@ -404,17 +402,17 @@ const matchPhotosToTakeoutPhotos_5 = async (
 const matchPhotosToTakeoutPhotos_6 = (
   takeoutFilesByFileName: IdToStringArray,
   matchedMediaItems: IdToMatchedMediaItem,
-  remainingUnmatchedMediaItemsNoFileNameMatches: any,
+  remainingUnmatchedMediaItemsNoFileNameMatches: MediaItem[],
 ) => {
   for (const mediaItem of remainingUnmatchedMediaItemsNoFileNameMatches) {
-    const fileName = mediaItem.filename;
+    const fileName = mediaItem.fileName;
     const fileExtension: string = path.extname(fileName);
 
     const filePathWithoutExtension = fileName.split('.').slice(0, -1).join('.');
 
     const filePathWithUpperCaseExtension = filePathWithoutExtension + fileExtension.toUpperCase();
     if (takeoutFilesByFileName.hasOwnProperty(filePathWithUpperCaseExtension)) {
-      matchedMediaItems[mediaItem.id] = {
+      matchedMediaItems[mediaItem.googleId] = {
         takeoutFilePath: filePathWithUpperCaseExtension,
         mediaItem,
       };
@@ -422,7 +420,7 @@ const matchPhotosToTakeoutPhotos_6 = (
 
     const filePathWithLowerCaseExtension = filePathWithoutExtension + fileExtension.toLowerCase();
     if (takeoutFilesByFileName.hasOwnProperty(filePathWithLowerCaseExtension)) {
-      matchedMediaItems[mediaItem.id] = {
+      matchedMediaItems[mediaItem.googleId] = {
         takeoutFilePath: filePathWithLowerCaseExtension,
         mediaItem,
       };
