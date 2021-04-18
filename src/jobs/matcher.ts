@@ -3,6 +3,7 @@ import { isNil, isNumber, isObject, isString } from 'lodash';
 import isomorphicPath from 'isomorphic-path';
 import { 
   GoogleMediaItem, 
+  GoogleMediaMetadata, 
   IdToGoogleMediaItemArray, 
   IdToGoogleMediaItems, 
   IdToMatchedMediaItem, 
@@ -18,6 +19,7 @@ import { tsPhotoUtilsConfiguration } from '../config';
 import { Tags } from 'exiftool-vendored';
 import connectDB from '../config/db';
 import { getAllLegacyMediaItems } from '../controllers';
+import { getAddedGoogleMediaItems } from './googleJobs';
 
 interface TakeoutFilesByTimeOfDay {
   dt: number;
@@ -57,11 +59,57 @@ export const migrateAndUpdate = async (): Promise<void> => {
           description
   */
 
-  const itemsToMigrate: IdToMediaItem = await getItemsToMigrate();
+  // build list of existing media items to migrate
+  let itemsToMigrate: IdToMediaItem = await getItemsToMigrate();
 
+  // add new items from google
+  itemsToMigrate = await mergeAddedGoogleMediaItems(itemsToMigrate);
+  
+  // match with takeoutFiles
   const matchedMediaItems: IdToMatchedMediaItem = await getMatchingTakeoutFiles(itemsToMigrate);
   console.log(matchedMediaItems);
   console.log('complete');
+}
+
+const mergeAddedGoogleMediaItems = async (itemsToMigrate: IdToMediaItem): Promise<IdToMediaItem> => {
+
+  const addedGoogleMediaItems: GoogleMediaItem[] = await getAddedGoogleMediaItems();
+  for (const googleMediaItem of addedGoogleMediaItems) {
+
+    let creationTime: Date;
+    let width: number;
+    let height: number;
+  
+    const mediaMetadata: GoogleMediaMetadata = googleMediaItem.mediaMetadata;
+    if (!isNil(mediaMetadata)) {
+      creationTime = mediaMetadata.creationTime;
+      try {
+        width = parseInt(mediaMetadata.width, 10);
+        height = parseInt(mediaMetadata.height, 10);  
+      } catch (e: any) {
+        console.log('parseInt failure');
+      }
+    }
+
+    const mediaItem: MediaItem = {
+      googleId: googleMediaItem.id,
+      fileName: googleMediaItem.filename,
+      filePath: null,  // null or empty or ??
+      googleUrl: googleMediaItem.productUrl,
+      mimeType: googleMediaItem.mimeType,
+      creationTime,
+      width,
+      height,
+      description: '',
+    }
+
+    if (itemsToMigrate.hasOwnProperty(googleMediaItem.id)) {
+      debugger;
+    }
+    itemsToMigrate[googleMediaItem.id] = mediaItem;
+  }
+
+  return itemsToMigrate;
 }
 
 const getItemsToMigrate = async (): Promise<IdToMediaItem> => {

@@ -38,7 +38,7 @@ export const buildGoogleMediaItemsById = async () => {
 }
 
 
-export const getAddedGoogleMediaItems = async () => {
+export const getAddedGoogleMediaItems = async (): Promise<GoogleMediaItem[]>  => {
 
   const addedGoogleMediaItems: GoogleMediaItem[] = [];
 
@@ -54,10 +54,12 @@ export const getAddedGoogleMediaItems = async () => {
     }
   }
 
-  await writeJsonToFile(
-    isomorphicPath.join(tsPhotoUtilsConfiguration.DATA_DIR, tsPhotoUtilsConfiguration.ADDED_GOOGLE_MEDIA_ITEMS),
-    addedGoogleMediaItems
-  );
+  // await writeJsonToFile(
+  //   isomorphicPath.join(tsPhotoUtilsConfiguration.DATA_DIR, tsPhotoUtilsConfiguration.ADDED_GOOGLE_MEDIA_ITEMS),
+  //   addedGoogleMediaItems
+  // );
+
+  return addedGoogleMediaItems;
 }
 
 export const getRemovedGoogleMediaItems = async () => {
