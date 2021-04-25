@@ -48,7 +48,6 @@ export const getAddedGoogleMediaItems = async (): Promise<GoogleMediaItem[]>  =>
   for (const googleMediaItemId in googleMediaItemsById) {
     if (Object.prototype.hasOwnProperty.call(googleMediaItemsById, googleMediaItemId)) {
       if (!Object.prototype.hasOwnProperty.call(oldGoogleMediaItemsById, googleMediaItemId)) {
-        console.log('added google media item(s) with id ' + googleMediaItemId);
         addedGoogleMediaItems.push(googleMediaItemsById[googleMediaItemId][0]);
       }
     }
@@ -64,6 +63,8 @@ export const getAddedGoogleMediaItems = async (): Promise<GoogleMediaItem[]>  =>
 
 export const getRemovedGoogleMediaItems = async () => {
 
+  const removedGoogleMediaItems: GoogleMediaItem[] = [];
+
   const googleMediaItemsById: IdToGoogleMediaItemArray = await getJsonFromFile(isomorphicPath.join(tsPhotoUtilsConfiguration.DATA_DIR, tsPhotoUtilsConfiguration.GOOGLE_MEDIA_ITEMS_BY_ID));
   const oldGoogleMediaItemsById: IdToGoogleMediaItemArray = await getJsonFromFile(isomorphicPath.join(tsPhotoUtilsConfiguration.DATA_DIR, tsPhotoUtilsConfiguration.OLD_GOOGLE_MEDIA_ITEMS_BY_ID));
 
@@ -71,7 +72,14 @@ export const getRemovedGoogleMediaItems = async () => {
     if (Object.prototype.hasOwnProperty.call(oldGoogleMediaItemsById, googleMediaItemId)) {
       if (!Object.prototype.hasOwnProperty.call(googleMediaItemsById, googleMediaItemId)) {
         console.log('removed google media item(s) with id ' + googleMediaItemId);
+        removedGoogleMediaItems.push(oldGoogleMediaItemsById[googleMediaItemId][0]);
       }
     }
   }
+
+  await writeJsonToFile(
+    isomorphicPath.join(tsPhotoUtilsConfiguration.DATA_DIR, 'removedMediaItems.json'),
+    removedGoogleMediaItems
+  );
+
 }

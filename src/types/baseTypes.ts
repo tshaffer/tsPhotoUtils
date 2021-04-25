@@ -48,7 +48,7 @@ export interface TsPhotoUtilsConfiguration {
   METADATA_FILE_PATH_BY_TAKEOUT_FILE_PATH: string;
 }
 
-interface MatchedMediaItem {
+export interface MatchedMediaItem {
   takeoutFilePath: string;
   mediaItem: MediaItem;
 }
