@@ -1,8 +1,9 @@
+import * as fs from 'fs-extra';
 import args from 'command-line-args';
 import dotenv from 'dotenv';
 import { LegacyMediaItem, MediaItem } from 'entities';
 import connectDB from './config/db';
-import { addMediaItemToDb, getAllLegacyMediaItems } from './controllers/dbInterface';
+import { addMediaItemToDb, getAllLegacyMediaItems, getAllMediaItems } from './controllers/dbInterface';
 import { GoogleMediaItem, IdToAnyArray, IdToGoogleMediaItems, IdToMatchedGoogleMediaItem, Jobs, MatchedGoogleMediaItem } from './types';
 import { closeStream, getJsonFromFile, openWriteStream, writeJsonToFile, writeToWriteStream } from './utils';
 
@@ -160,6 +161,32 @@ const findGPSInfoInTakeoutFiles = async () => {
   console.log('filesWithoutGPS: ', filesWithoutGPS);
 }
 
+const getMediaItemsOnLocalStorage = async () => {
+
+  await connectDB();
+
+  let filePathSpecifiedCount = 0;
+  let fileExistsCount = 0;
+
+  const mediaItems: MediaItem[] = await getAllMediaItems();
+  for (const mediaItem of mediaItems) {
+    const filePath = mediaItem.filePath;
+    if (!isNil(filePath)) {
+      if (filePath.length > 0) {
+        filePathSpecifiedCount++;
+        if (fs.existsSync(filePath)) {
+          fileExistsCount++;
+        }
+      }
+    }
+  }
+
+  console.log('Number of filePaths specified');
+  console.log(filePathSpecifiedCount);
+  console.log('Number of files that exist');
+  console.log(fileExistsCount);
+}
+
 async function main() {
 
   console.log('main invoked');
@@ -191,6 +218,10 @@ async function main() {
     case Jobs.GetRemovedGoogleMediaItems:
       console.log('GetRemovedGoogleMediaItems');
       await getRemovedGoogleMediaItems();
+      break;
+    case Jobs.GetMediaItemsOnLocalStorage:
+      console.log('GetMediaItemsOnLocalStorage');
+      await getMediaItemsOnLocalStorage();
       break;
     case Jobs.GetGpsDataFromTakeoutFiles:
       console.log('invoke GetGpsDataFromTakeoutFiles');

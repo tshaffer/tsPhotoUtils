@@ -23,6 +23,7 @@ export enum Jobs {
   GetRemovedDbMediaItems = 'GetRemovedDbMediaItems',
   GetAddedGoogleMediaItems = 'GetAddedGoogleMediaItems',
   GetRemovedGoogleMediaItems = 'GetRemovedGoogleMediaItems',
+  GetMediaItemsOnLocalStorage = 'GetMediaItemsOnLocalStorage',
   GetGpsDataFromTakeoutFiles = 'GetGpsDataFromTakeoutFiles',
   BuildTakeoutFileMaps = 'BuildTakeoutFileMaps',
   BuildMetadataFileMap = 'BuildMetadataFileMap',
