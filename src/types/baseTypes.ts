@@ -19,6 +19,8 @@ export interface FilePathToExifTags {
 
 export enum Jobs {
   BuildGoogleMediaItemsById = 'BuildGoogleMediaItemsById',
+  GetAddedDbMediaItems = 'GetAddedDbMediaItems',
+  GetRemovedDbMediaItems = 'GetRemovedDbMediaItems',
   GetAddedGoogleMediaItems = 'GetAddedGoogleMediaItems',
   GetRemovedGoogleMediaItems = 'GetRemovedGoogleMediaItems',
   GetGpsDataFromTakeoutFiles = 'GetGpsDataFromTakeoutFiles',

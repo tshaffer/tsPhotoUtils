@@ -24,13 +24,32 @@ export const getAllLegacyMediaItems = async (): Promise<LegacyMediaItem[]> => {
   const legacyMediaItemModel = getLegacyMediaitemModel();
 
   const records: LegacyMediaItem[] = [];
-  const documents: any = await (legacyMediaItemModel as any).find().limit(100).exec();
-  // const documents: any = await (legacyMediaItemModel as any).find().exec();
+  // const documents: any = await (legacyMediaItemModel as any).find().limit(100).exec();
+  const documents: any = await (legacyMediaItemModel as any).find().exec();
   // const documents: any = await (legacyMediaItemModel as any).find({ fileName: 'IMG_4726.PNG' }).exec();
   for (const document of documents) {
     const legacyMediaItem: LegacyMediaItem = document.toObject() as LegacyMediaItem;
     legacyMediaItem._id = document._id.toString();
     records.push(legacyMediaItem);
+  }
+  console.log('records');
+  console.log(records);
+  return records;
+}
+
+
+export const getAllMediaItems = async (): Promise<MediaItem[]> => {
+
+  const mediaItemModel = getMediaitemModel();
+
+  const records: MediaItem[] = [];
+  // const documents: any = await (mediaItemModel as any).find().limit(100).exec();
+  const documents: any = await (mediaItemModel as any).find().exec();
+  // const documents: any = await (mediaItemModel as any).find({ fileName: 'IMG_4726.PNG' }).exec();
+  for (const document of documents) {
+    const mediaItem: MediaItem = document.toObject() as MediaItem;
+    mediaItem.googleId = document.googleId.toString();
+    records.push(mediaItem);
   }
   console.log('records');
   console.log(records);

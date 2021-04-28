@@ -24,6 +24,8 @@ import {
   buildMetadataFileMap,
   compareGPSTags,
   migrateAndUpdate,
+  getAddedDbMediaItems,
+  getRemovedDbMediaItems,
 } from './jobs';
 import { readConfig } from './config';
 import { checkMetadataInNewFiles } from './jobs/stats';
@@ -173,6 +175,14 @@ async function main() {
     case Jobs.BuildGoogleMediaItemsById:
       console.log('BuildGoogleMediaItemsById');
       await buildGoogleMediaItemsById();
+      break;
+    case Jobs.GetAddedDbMediaItems:
+      console.log('GetAddedDbMediaItems');
+      await getAddedDbMediaItems();
+      break;
+    case Jobs.GetRemovedDbMediaItems:
+      console.log('GetRemovedDbMediaItems');
+      await getRemovedDbMediaItems();
       break;
     case Jobs.GetAddedGoogleMediaItems:
       console.log('GetAddedGoogleMediaItems');
