@@ -1,17 +1,23 @@
+import * as fs from 'fs-extra';
 import isomorphicPath from 'isomorphic-path';
 import {
   GoogleMediaItem,
   IdToAnyArray,
   IdToGoogleMediaItemArray,
+  MediaItem,
 } from '../types';
 import { AuthService } from '../auth';
 import {
+  downloadMediaItems,
+  getAllMediaItems,
   getAllMediaItemsFromGoogle,
   getAuthService,
+  GooglePhotoAPIs,
 } from '../controllers';
 import { getJsonFromFile, writeJsonToFile } from '../utils';
 import { isNil } from 'lodash';
 import { tsPhotoUtilsConfiguration } from '../config';
+import connectDB from '../config/db';
 
 let authService: AuthService;
 
@@ -38,7 +44,7 @@ export const buildGoogleMediaItemsById = async () => {
 }
 
 
-export const getAddedGoogleMediaItems = async (): Promise<GoogleMediaItem[]>  => {
+export const getAddedGoogleMediaItems = async (): Promise<GoogleMediaItem[]> => {
 
   const addedGoogleMediaItems: GoogleMediaItem[] = [];
 
@@ -82,4 +88,53 @@ export const getRemovedGoogleMediaItems = async () => {
     removedGoogleMediaItems
   );
 
+}
+
+export const downloadGooglePhotos = async () => {
+
+  // const mediaItemIds: string[] = [];
+  const mediaItemsToDownload: MediaItem[] = [];
+
+  await connectDB();
+
+  const mediaItems: MediaItem[] = await getAllMediaItems();
+  for (const mediaItem of mediaItems) {
+    const filePath = mediaItem.filePath;
+    if (!isNil(filePath)) {
+      if (filePath.length > 0) {
+        // if (!fs.existsSync(filePath)) {
+        // mediaItemIds.push(mediaItem.googleId);
+        mediaItemsToDownload.push(mediaItem);
+        // }
+      }
+    }
+  }
+
+  // const groups = createGroups(mediaItemIds, GooglePhotoAPIs.BATCH_GET_LIMIT);
+  const groups = createGroups(mediaItemsToDownload, GooglePhotoAPIs.BATCH_GET_LIMIT);
+  console.log(groups);
+
+  if (isNil(authService)) {
+    authService = await getAuthService();
+  }
+
+  downloadMediaItems(authService, groups);
+
+  return Promise.resolve();
+}
+
+function createGroups(mediaItems: MediaItem[], groupSize: number): MediaItem[][] {
+
+  const groups: MediaItem[][] = [];
+
+  const numOfGroups = Math.ceil(mediaItems.length / groupSize);
+  for (let i = 0; i < numOfGroups; i++) {
+    const startIdx = i * groupSize;
+    const endIdx = i * groupSize + groupSize;
+
+    const subItems: MediaItem[] = mediaItems.slice(startIdx, endIdx);
+    groups.push(subItems);
+  }
+
+  return groups;
 }

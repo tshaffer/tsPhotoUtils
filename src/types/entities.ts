@@ -31,7 +31,8 @@ export interface MediaItem {
   googleId: string;
   fileName: string;
   filePath: string;
-  googleUrl: string;
+  baseUrl: string;
+  productUrl: string;
   mimeType: string;
   creationTime: Date;
   width: number;

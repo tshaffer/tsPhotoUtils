@@ -59,7 +59,7 @@ export const buildMetadataFileMap = async () => {
 
   const metadataFilePathByTakeoutFilePath: IdToString = {};
 
-  const metadataFilePaths: string[] = await getJsonFilePaths(tsPhotoUtilsConfiguration.MEDIA_ITEMS_DIR);
+  const metadataFilePaths: string[] = await getJsonFilePaths(tsPhotoUtilsConfiguration.TAKEOUT_ITEMS_DIR);
   const metadataFilePathsByFilePath: any = {};
   for (const metadataFilePath of metadataFilePaths) {
 
@@ -108,7 +108,7 @@ export const buildTakeoutFileMaps = async () => {
   const takeoutFilesByModifyDate: IdToStringArray = {};
   const takeoutFilesByImageDimensions: IdToStringArray = {};
 
-  const filePaths: string[] = getImageFilePaths(tsPhotoUtilsConfiguration.MEDIA_ITEMS_DIR);
+  const filePaths: string[] = getImageFilePaths(tsPhotoUtilsConfiguration.TAKEOUT_ITEMS_DIR);
 
   let fileCount = 0;
 
@@ -197,9 +197,9 @@ export const testJob0 = async () => {
   let missingMatchingMetadataFiles = 0;
   const duplicateFileNames: string[] = [];
 
-  // const imageFilePaths: string[] = getImageFilePaths(tsPhotoUtilsConfiguration.MEDIA_ITEMS_DIR);
+  // const imageFilePaths: string[] = getImageFilePaths(tsPhotoUtilsConfiguration.TAKEOUT_ITEMS_DIR);
 
-  const jsonFilePaths: string[] = await getJsonFilePaths(tsPhotoUtilsConfiguration.MEDIA_ITEMS_DIR);
+  const jsonFilePaths: string[] = await getJsonFilePaths(tsPhotoUtilsConfiguration.TAKEOUT_ITEMS_DIR);
   const jsonFilePathsByFileName: any = {};
   for (const jsonFilePath of jsonFilePaths) {
     const fileName = path.basename(jsonFilePath);

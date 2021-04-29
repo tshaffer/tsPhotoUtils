@@ -157,7 +157,8 @@ const mergeAddedGoogleMediaItems = async (itemsToMigrate: IdToMediaItem): Promis
       googleId: googleMediaItem.id,
       fileName: googleMediaItem.filename,
       filePath: null,  // null or empty or ??
-      googleUrl: googleMediaItem.productUrl,
+      baseUrl: googleMediaItem.baseUrl,
+      productUrl: googleMediaItem.productUrl,
       mimeType: googleMediaItem.mimeType,
       creationTime,
       width,
@@ -192,7 +193,8 @@ const getItemsToMigrate = async (): Promise<IdToMediaItem> => {
         googleId: legacyMediaItem.id,
         fileName: legacyMediaItem.fileName,
         filePath: legacyMediaItem.filePath,  // null or empty or ??
-        googleUrl: legacyMediaItem.productUrl,
+        productUrl: legacyMediaItem.productUrl,
+        baseUrl: legacyMediaItem.baseUrl,
         mimeType: legacyMediaItem.mimeType,
         creationTime: legacyMediaItem.creationTime,
         width: legacyMediaItem.width,

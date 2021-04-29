@@ -27,6 +27,7 @@ import {
   migrateAndUpdate,
   getAddedDbMediaItems,
   getRemovedDbMediaItems,
+  downloadGooglePhotos,
 } from './jobs';
 import { readConfig } from './config';
 import { checkMetadataInNewFiles } from './jobs/stats';
@@ -199,6 +200,10 @@ async function main() {
   console.log(options);
 
   switch (options.job) {
+    case Jobs.DownloadGooglePhotos:
+      console.log('DownloadGooglePhotos');
+      await downloadGooglePhotos();
+      break;
     case Jobs.BuildGoogleMediaItemsById:
       console.log('BuildGoogleMediaItemsById');
       await buildGoogleMediaItemsById();
