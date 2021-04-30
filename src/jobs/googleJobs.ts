@@ -2,7 +2,6 @@ import * as fs from 'fs-extra';
 import isomorphicPath from 'isomorphic-path';
 import {
   GoogleMediaItem,
-  IdToAnyArray,
   IdToGoogleMediaItemArray,
   MediaItem,
 } from '../types';
@@ -92,7 +91,6 @@ export const getRemovedGoogleMediaItems = async () => {
 
 export const downloadGooglePhotos = async () => {
 
-  // const mediaItemIds: string[] = [];
   const mediaItemsToDownload: MediaItem[] = [];
 
   await connectDB();
@@ -100,17 +98,11 @@ export const downloadGooglePhotos = async () => {
   const mediaItems: MediaItem[] = await getAllMediaItems();
   for (const mediaItem of mediaItems) {
     const filePath = mediaItem.filePath;
-    if (!isNil(filePath)) {
-      if (filePath.length > 0) {
-        // if (!fs.existsSync(filePath)) {
-        // mediaItemIds.push(mediaItem.googleId);
-        mediaItemsToDownload.push(mediaItem);
-        // }
-      }
+    if (isNil(filePath) || filePath.length === 0 || (!fs.existsSync(filePath))) {
+      mediaItemsToDownload.push(mediaItem);
     }
   }
 
-  // const groups = createGroups(mediaItemIds, GooglePhotoAPIs.BATCH_GET_LIMIT);
   const groups = createGroups(mediaItemsToDownload, GooglePhotoAPIs.BATCH_GET_LIMIT);
   console.log(groups);
 

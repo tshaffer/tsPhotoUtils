@@ -14,6 +14,7 @@ export const GooglePhotoAPIs = {
   BATCH_GET_LIMIT: 49
 };
 import { tsPhotoUtilsConfiguration } from '../config';
+import { updateMediaItemInDb } from './dbInterface';
 
 export const getAllMediaItemsFromGoogle = async (authService: AuthService, nextPageToken: any = null): Promise<GoogleMediaItem[]> => {
 
@@ -97,8 +98,8 @@ export const downloadMediaItems = async (authService: AuthService, mediaItemGrou
       const retVal: any = await (downloadMediaItem(authService, mediaItem));
       console.log(retVal);
       if (retVal.valid) {
-        debugger;
-          // await addGoogleMediaItemToDb(retVal.mediaItem, retVal.where);
+        mediaItem.filePath = retVal.where;
+        await updateMediaItemInDb(mediaItem);
       } else {
         debugger;
       }
@@ -154,7 +155,7 @@ const createDownloadUrl = async (mediaItem: MediaItem) => {
   //   const { width, height } = mediaItem.mediaMetadata;
   //   downloadParams += `w${width}-h${height}`;
   // }
-  
+
   downloadParams += `w${width}-h${height}`;
   return `${mediaItem.baseUrl}=${downloadParams}`;
 };
