@@ -30,7 +30,6 @@ export enum Jobs {
   BuildMetadataFileMap = 'BuildMetadataFileMap',
   CompareGPSTags = 'CompareGPSTags',
   CheckMetadataInNewFiles = 'CheckMetadataInNewFiles',
-  Db = 'Db',
   MigrateAndUpdate = 'MigrateAndUpdate',
   TestJob = 'TestJob',
 }
