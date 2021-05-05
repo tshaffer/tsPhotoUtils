@@ -2,12 +2,14 @@ import * as fs from 'fs-extra';
 import isomorphicPath from 'isomorphic-path';
 import {
   GoogleMediaItem,
+  GoogleMediaItemsByIdInstance,
   IdToGoogleMediaItemArray,
   MediaItem,
 } from '../types';
 import { AuthService } from '../auth';
 import {
   downloadMediaItems,
+  downloadMediaItemsMetadata,
   getAllMediaItems,
   getAllMediaItemsFromGoogle,
   getAuthService,
@@ -36,9 +38,14 @@ export const buildGoogleMediaItemsById = async () => {
     googleMediaItemsById[googleMediaItem.id].push(googleMediaItem);
   }
 
+  const googleMediaItemsByIdInstance: GoogleMediaItemsByIdInstance = {
+    creationDate: new Date().toISOString(),
+    googleMediaItemsById,
+  };
+
   await writeJsonToFile(
     isomorphicPath.join(tsPhotoUtilsConfiguration.DATA_DIR, tsPhotoUtilsConfiguration.GOOGLE_MEDIA_ITEMS_BY_ID),
-    googleMediaItemsById
+    googleMediaItemsByIdInstance
   );
 }
 
@@ -47,16 +54,22 @@ export const getAddedGoogleMediaItems = async (): Promise<GoogleMediaItem[]> => 
 
   const addedGoogleMediaItems: GoogleMediaItem[] = [];
 
-  const googleMediaItemsById: IdToGoogleMediaItemArray = await getJsonFromFile(isomorphicPath.join(tsPhotoUtilsConfiguration.DATA_DIR, tsPhotoUtilsConfiguration.GOOGLE_MEDIA_ITEMS_BY_ID));
-  const oldGoogleMediaItemsById: IdToGoogleMediaItemArray = await getJsonFromFile(isomorphicPath.join(tsPhotoUtilsConfiguration.DATA_DIR, tsPhotoUtilsConfiguration.OLD_GOOGLE_MEDIA_ITEMS_BY_ID));
+  const googleMediaItemsByIdInstance: GoogleMediaItemsByIdInstance = await getJsonFromFile(isomorphicPath.join(tsPhotoUtilsConfiguration.DATA_DIR, tsPhotoUtilsConfiguration.GOOGLE_MEDIA_ITEMS_BY_ID));
+  const previousGoogleMediaItemsByIdInstance: GoogleMediaItemsByIdInstance = await getJsonFromFile(isomorphicPath.join(tsPhotoUtilsConfiguration.DATA_DIR, tsPhotoUtilsConfiguration.OLD_GOOGLE_MEDIA_ITEMS_BY_ID));
+
+  const googleMediaItemsById: IdToGoogleMediaItemArray = googleMediaItemsByIdInstance.googleMediaItemsById;
+  const previousGoogleMediaItemsById: IdToGoogleMediaItemArray = previousGoogleMediaItemsByIdInstance.googleMediaItemsById;
 
   for (const googleMediaItemId in googleMediaItemsById) {
     if (Object.prototype.hasOwnProperty.call(googleMediaItemsById, googleMediaItemId)) {
-      if (!Object.prototype.hasOwnProperty.call(oldGoogleMediaItemsById, googleMediaItemId)) {
+      if (!Object.prototype.hasOwnProperty.call(previousGoogleMediaItemsById, googleMediaItemId)) {
         addedGoogleMediaItems.push(googleMediaItemsById[googleMediaItemId][0]);
       }
     }
   }
+
+  console.log('addedGoogleMediaItems');
+  console.log(addedGoogleMediaItems);
 
   // await writeJsonToFile(
   //   isomorphicPath.join(tsPhotoUtilsConfiguration.DATA_DIR, tsPhotoUtilsConfiguration.ADDED_GOOGLE_MEDIA_ITEMS),
@@ -70,22 +83,28 @@ export const getRemovedGoogleMediaItems = async () => {
 
   const removedGoogleMediaItems: GoogleMediaItem[] = [];
 
-  const googleMediaItemsById: IdToGoogleMediaItemArray = await getJsonFromFile(isomorphicPath.join(tsPhotoUtilsConfiguration.DATA_DIR, tsPhotoUtilsConfiguration.GOOGLE_MEDIA_ITEMS_BY_ID));
-  const oldGoogleMediaItemsById: IdToGoogleMediaItemArray = await getJsonFromFile(isomorphicPath.join(tsPhotoUtilsConfiguration.DATA_DIR, tsPhotoUtilsConfiguration.OLD_GOOGLE_MEDIA_ITEMS_BY_ID));
+  const googleMediaItemsByIdInstance: GoogleMediaItemsByIdInstance = await getJsonFromFile(isomorphicPath.join(tsPhotoUtilsConfiguration.DATA_DIR, tsPhotoUtilsConfiguration.GOOGLE_MEDIA_ITEMS_BY_ID));
+  const previousGoogleMediaItemsByIdInstance: GoogleMediaItemsByIdInstance = await getJsonFromFile(isomorphicPath.join(tsPhotoUtilsConfiguration.DATA_DIR, tsPhotoUtilsConfiguration.OLD_GOOGLE_MEDIA_ITEMS_BY_ID));
 
-  for (const googleMediaItemId in oldGoogleMediaItemsById) {
-    if (Object.prototype.hasOwnProperty.call(oldGoogleMediaItemsById, googleMediaItemId)) {
+  const googleMediaItemsById: IdToGoogleMediaItemArray = googleMediaItemsByIdInstance.googleMediaItemsById;
+  const previousGoogleMediaItemsById: IdToGoogleMediaItemArray = previousGoogleMediaItemsByIdInstance.googleMediaItemsById;
+
+  for (const googleMediaItemId in previousGoogleMediaItemsById) {
+    if (Object.prototype.hasOwnProperty.call(previousGoogleMediaItemsById, googleMediaItemId)) {
       if (!Object.prototype.hasOwnProperty.call(googleMediaItemsById, googleMediaItemId)) {
         console.log('removed google media item(s) with id ' + googleMediaItemId);
-        removedGoogleMediaItems.push(oldGoogleMediaItemsById[googleMediaItemId][0]);
+        removedGoogleMediaItems.push(previousGoogleMediaItemsById[googleMediaItemId][0]);
       }
     }
   }
 
-  await writeJsonToFile(
-    isomorphicPath.join(tsPhotoUtilsConfiguration.DATA_DIR, 'removedMediaItems.json'),
-    removedGoogleMediaItems
-  );
+  console.log('removedGoogleMediaItems');
+  console.log(removedGoogleMediaItems);
+
+  // await writeJsonToFile(
+  //   isomorphicPath.join(tsPhotoUtilsConfiguration.DATA_DIR, 'removedMediaItems.json'),
+  //   removedGoogleMediaItems
+  // );
 
 }
 
@@ -103,29 +122,61 @@ export const downloadGooglePhotos = async () => {
     }
   }
 
-  const groups = createGroups(mediaItemsToDownload, GooglePhotoAPIs.BATCH_GET_LIMIT);
+  const mediaItemIds: string[] = mediaItems.map((mediaItem: MediaItem) => {
+    return mediaItem.googleId;
+  });
+
+  const groups = createGroups(mediaItemIds, GooglePhotoAPIs.BATCH_GET_LIMIT);
   console.log(groups);
+
+  // const groups: MediaItem[][] = createGroups(mediaItemsToDownload, GooglePhotoAPIs.BATCH_GET_LIMIT);
+  // console.log(groups);
 
   if (isNil(authService)) {
     authService = await getAuthService();
   }
 
-  downloadMediaItems(authService, groups);
+  const miniGroups = [groups[0]];
+  const googleMediaItemGroups: GoogleMediaItem[][] = await Promise.all(miniGroups.map((sliceIds: any) => {
+    return downloadMediaItemsMetadata(authService, sliceIds);
+  }));
+
+  // const googleMediaItemGroups: GoogleMediaItem[][] = await Promise.all(groups.map((sliceIds: any) => {
+  //   return downloadMediaItemsMetadata(authService, sliceIds);
+  // }));
+
+  downloadMediaItems(authService, googleMediaItemGroups);
 
   return Promise.resolve();
 }
 
-function createGroups(mediaItems: MediaItem[], groupSize: number): MediaItem[][] {
+// function createGroups(mediaItems: MediaItem[], groupSize: number): MediaItem[][] {
 
-  const groups: MediaItem[][] = [];
+//   const groups: MediaItem[][] = [];
 
-  const numOfGroups = Math.ceil(mediaItems.length / groupSize);
+//   const numOfGroups = Math.ceil(mediaItems.length / groupSize);
+//   for (let i = 0; i < numOfGroups; i++) {
+//     const startIdx = i * groupSize;
+//     const endIdx = i * groupSize + groupSize;
+
+//     const subItems: MediaItem[] = mediaItems.slice(startIdx, endIdx);
+//     groups.push(subItems);
+//   }
+
+//   return groups;
+// }
+
+export function createGroups(items: string[], groupSize: number): string[][] {
+  
+  const groups: string[][] = [];
+
+  const numOfGroups = Math.ceil(items.length / groupSize);
   for (let i = 0; i < numOfGroups; i++) {
-    const startIdx = i * groupSize;
-    const endIdx = i * groupSize + groupSize;
+      const startIdx = i * groupSize;
+      const endIdx = i * groupSize + groupSize;
 
-    const subItems: MediaItem[] = mediaItems.slice(startIdx, endIdx);
-    groups.push(subItems);
+      const subItems: string[] = items.slice(startIdx, endIdx);
+      groups.push(subItems);
   }
 
   return groups;

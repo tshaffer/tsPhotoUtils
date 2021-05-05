@@ -19,6 +19,11 @@ export type IdToGoogleMediaItemArray = {
   [key: string]: GoogleMediaItem[]
 }
 
+export interface GoogleMediaItemsByIdInstance {
+  creationDate: string;   // ISO date as string
+  googleMediaItemsById: IdToGoogleMediaItemArray;
+}
+
 export interface GoogleMediaItem {
   id: string;
   filename: string;
