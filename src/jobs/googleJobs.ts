@@ -122,62 +122,64 @@ export const downloadGooglePhotos = async () => {
     }
   }
 
-  const mediaItemIds: string[] = mediaItems.map((mediaItem: MediaItem) => {
+  const mediaItemGoogleIds: string[] = mediaItems.map((mediaItem: MediaItem) => {
     return mediaItem.googleId;
   });
 
-  const groups = createGroups(mediaItemIds, GooglePhotoAPIs.BATCH_GET_LIMIT);
-  console.log(groups);
-
-  // const groups: MediaItem[][] = createGroups(mediaItemsToDownload, GooglePhotoAPIs.BATCH_GET_LIMIT);
+  // const groups: string[][] = createGroups(mediaItemGoogleIds, GooglePhotoAPIs.BATCH_GET_LIMIT);
   // console.log(groups);
+
+  const mediaItemGroups: MediaItem[][] = createGroups(mediaItemsToDownload, GooglePhotoAPIs.BATCH_GET_LIMIT);
+  console.log(mediaItemGroups);
 
   if (isNil(authService)) {
     authService = await getAuthService();
   }
 
-  const miniGroups = [groups[0]];
-  const googleMediaItemGroups: GoogleMediaItem[][] = await Promise.all(miniGroups.map((sliceIds: any) => {
-    return downloadMediaItemsMetadata(authService, sliceIds);
-  }));
-
+  const miniMediaItemGroups: MediaItem[][] = [mediaItemGroups[0], mediaItemGroups[1]];
+  await Promise.all(
+    miniMediaItemGroups.map((mediaItems: MediaItem[]) => {
+      return downloadMediaItemsMetadata(authService, mediaItems);
+    }
+  ));
+  
   // const googleMediaItemGroups: GoogleMediaItem[][] = await Promise.all(groups.map((sliceIds: any) => {
   //   return downloadMediaItemsMetadata(authService, sliceIds);
   // }));
 
-  downloadMediaItems(authService, googleMediaItemGroups);
+  downloadMediaItems(authService, miniMediaItemGroups);
 
   return Promise.resolve();
 }
 
-// function createGroups(mediaItems: MediaItem[], groupSize: number): MediaItem[][] {
+function createGroups(mediaItems: MediaItem[], groupSize: number): MediaItem[][] {
 
-//   const groups: MediaItem[][] = [];
+  const groups: MediaItem[][] = [];
 
-//   const numOfGroups = Math.ceil(mediaItems.length / groupSize);
-//   for (let i = 0; i < numOfGroups; i++) {
-//     const startIdx = i * groupSize;
-//     const endIdx = i * groupSize + groupSize;
-
-//     const subItems: MediaItem[] = mediaItems.slice(startIdx, endIdx);
-//     groups.push(subItems);
-//   }
-
-//   return groups;
-// }
-
-export function createGroups(items: string[], groupSize: number): string[][] {
-  
-  const groups: string[][] = [];
-
-  const numOfGroups = Math.ceil(items.length / groupSize);
+  const numOfGroups = Math.ceil(mediaItems.length / groupSize);
   for (let i = 0; i < numOfGroups; i++) {
-      const startIdx = i * groupSize;
-      const endIdx = i * groupSize + groupSize;
+    const startIdx = i * groupSize;
+    const endIdx = i * groupSize + groupSize;
 
-      const subItems: string[] = items.slice(startIdx, endIdx);
-      groups.push(subItems);
+    const subItems: MediaItem[] = mediaItems.slice(startIdx, endIdx);
+    groups.push(subItems);
   }
 
   return groups;
 }
+
+// export function createGroups(items: string[], groupSize: number): string[][] {
+
+//   const groups: string[][] = [];
+
+//   const numOfGroups = Math.ceil(items.length / groupSize);
+//   for (let i = 0; i < numOfGroups; i++) {
+//       const startIdx = i * groupSize;
+//       const endIdx = i * groupSize + groupSize;
+
+//       const subItems: string[] = items.slice(startIdx, endIdx);
+//       groups.push(subItems);
+//   }
+
+//   return groups;
+// }
