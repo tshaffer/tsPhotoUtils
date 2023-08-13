@@ -17,7 +17,7 @@
       ],
       "args": [
         //"--verbose", "--timeout=1000", "--src=one.js", "--src=two.js"
-        "--job=Db"
+        "--job=BuildGoogleMediaItemsById"
       ]
     }
   ]
