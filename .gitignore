@@ -24,3 +24,6 @@ dist
 index.d.ts
 dev/bootstrap.main.js.map
 
+data/filePathsToExifTags.json
+data/jsonFiles.txt
+secrets/credentials.json
